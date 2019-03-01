@@ -103,5 +103,5 @@ if __name__ == '__main__':
     writer = SummaryWriter(log_dir='Graph')
 
     for epoch in range(nb_epochs):
-        #train(model, dataloaders['train'], writer)
+        train(model, dataloaders['train'], writer)
         evaluate(model, dataloaders['test'], writer)
