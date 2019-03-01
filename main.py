@@ -1,10 +1,11 @@
+import os
+
 import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-# import matplotlib.pyplot as plt
 from tensorboardX import SummaryWriter
 
 from models import ConvNet
@@ -13,6 +14,8 @@ from models import ConvNet
 batch_size = 100
 nb_epochs = 5
 device = torch.device('cpu')
+CHECKPOINT_FOLDER = 'checkpoints/'
+restore_from_checkpoint = True
 
 def get_dataloaders(dataset='CIFAR10', transform=transforms.Compose([transforms.ToTensor()])):
     suported_datasets = ['CIFAR10']
@@ -40,11 +43,13 @@ def get_model(model_type='Basic', conv='2D'):
 
 def train(model, dataloader, writer):
     model.train()
+    losses = torch.empty(len(dataloader), requires_grad=False)
     for i, (images, labels) in enumerate(dataloader):
         images = images.to(device)
         labels = labels.to(device)
         outputs = model(images)
         loss = criterion(outputs, labels)
+        losses[i] = loss.item()
         writer.add_scalars('graph/loss', {'train': loss.item()}, epoch*500 + i)
         
         optimizer.zero_grad()
@@ -60,9 +65,10 @@ def train(model, dataloader, writer):
                   .format(epoch + 1, nb_epochs, i + 1, len(dataloader), loss.item(),
                           (correct / total) * 100))
             writer.add_scalars('graph/accuracy', {'train': (correct / total) * 100}, epoch*500 + i)
-
+    return losses.mean().item()
 
 def evaluate(model, dataloader, writer):
+    # TODO add echo to eval
     model.eval()
     correct_sum = 0
     total_sum = 0
@@ -86,10 +92,13 @@ def evaluate(model, dataloader, writer):
 
 if __name__ == '__main__':
     # load the model
+    starting_epoch = 0
     dataloaders = get_dataloaders('CIFAR10')
 
     model = get_model('Basic')
-    # training loop
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
     if torch.cuda.is_available():
         print("Model runing on CUDA")
         _ = model.cuda()
@@ -97,11 +106,30 @@ if __name__ == '__main__':
     else:
         print("Model runing on CPU")
     
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    
+    if restore_from_checkpoint:
+        path = os.path.join(CHECKPOINT_FOLDER, 'model.tar')
+        try:
+            checkpoint = torch.load(path)
+            model.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            starting_epoch = checkpoint['epoch']
+            print(f"Model restored from epoch {starting_epoch}")
+        except FileNotFoundError:
+            print(f"Can't restore from checkpoint as checkpoint {path} doesn't exist")
+
     
     writer = SummaryWriter(log_dir='Graph')
 
-    for epoch in range(nb_epochs):
+    if not os.path.isdir(CHECKPOINT_FOLDER):
+        os.makedirs(CHECKPOINT_FOLDER)
+
+    # training loop
+    for epoch in range(starting_epoch, nb_epochs):
         train(model, dataloaders['train'], writer)
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict()
+            }, os.path.join(CHECKPOINT_FOLDER, 'model.tar'))
         evaluate(model, dataloaders['test'], writer)
