@@ -93,6 +93,8 @@ if __name__ == '__main__':
         print("Model runing on CUDA")
         _ = model.cuda()
         device = torch.device('cuda')
+    else:
+        print("Model runing on CPU")
     
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
