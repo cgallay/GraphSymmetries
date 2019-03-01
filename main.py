@@ -1,4 +1,5 @@
 import os
+import argparse
 
 import torch
 import torch.nn as nn
@@ -12,7 +13,6 @@ from models import ConvNet, vgg11
 
 # TODO add it to an argparser
 batch_size = 100
-nb_epochs = 5
 device = torch.device('cpu')
 CHECKPOINT_FOLDER = 'checkpoints/'
 restore_from_checkpoint = True
@@ -44,7 +44,7 @@ def get_model(model_type='Basic', conv='2D'):
         return vgg11()
 
 
-def train(model, dataloader, writer):
+def train(model, dataloader, writer, epoch, nb_epochs):
     model.train()
     losses = torch.empty(len(dataloader), requires_grad=False)
     for i, (images, labels) in enumerate(dataloader):
@@ -71,7 +71,7 @@ def train(model, dataloader, writer):
             writer.add_scalars('graph/accuracy', {'train': (correct / total) * 100}, epoch*500 + i)
     return losses.mean().item()
 
-def evaluate(model, dataloader, writer):
+def evaluate(model, dataloader, writer, epoch):
     # TODO add echo to eval
     model.eval()
     correct_sum = 0
@@ -93,8 +93,16 @@ def evaluate(model, dataloader, writer):
     writer.add_scalars('graph/loss', {'test': sum(test_loss)/ len(test_loss)}, (epoch+1)*500)
     writer.add_scalars('graph/accuracy', {'test': (correct_sum / total_sum) * 100}, (epoch+1)*500)
 
+def get_args():
+    parser = argparse.ArgumentParser(
+        description='Train CNN.')
+    parser.add_argument('--nb_epochs', type=int, default=5,
+                        help='Number of epoch for the training.')
+
+    return parser.parse_args()
 
 if __name__ == '__main__':
+    args = get_args()
     # load the model
     starting_epoch = 0
     dataloaders = get_dataloaders('CIFAR10')
@@ -129,12 +137,13 @@ if __name__ == '__main__':
         os.makedirs(CHECKPOINT_FOLDER)
 
     # training loop
-    for epoch in range(starting_epoch, nb_epochs):
-        train(model, dataloaders['train'], writer)
+    print(f"training for {args.nb_epochs} epochs")
+    for epoch in range(starting_epoch, args.nb_epochs):
+        train(model, dataloaders['train'], writer, epoch, args.nb_epochs)
         # TODO save best model according to loss
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict()
             }, os.path.join(CHECKPOINT_FOLDER, 'model.tar'))
-        evaluate(model, dataloaders['test'], writer)
+        evaluate(model, dataloaders['test'], writer, epoch)
