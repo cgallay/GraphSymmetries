@@ -66,6 +66,7 @@ def evaluate(model, dataloader, writer):
     model.eval()
     correct_sum = 0
     total_sum = 0
+    test_loss = []
     with torch.no_grad():
         for i, (images, labels) in enumerate(dataloader):
             images = images.to(device)
@@ -102,5 +103,5 @@ if __name__ == '__main__':
     writer = SummaryWriter(log_dir='Graph')
 
     for epoch in range(nb_epochs):
-        train(model, dataloaders['train'], writer)
-        evaluate(mode, dataloaders['test'], writer)
+        #train(model, dataloaders['train'], writer)
+        evaluate(model, dataloaders['test'], writer)
