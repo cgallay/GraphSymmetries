@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
 
-from models import ConvNet
+from models import ConvNet, vgg11
 
 # TODO add it to an argparser
 batch_size = 100
@@ -34,12 +34,15 @@ def get_dataloaders(dataset='CIFAR10', transform=transforms.Compose([transforms.
 def get_model(model_type='Basic', conv='2D'):
     if conv not in ['2D', 'graph']:
         raise ValueError(f"{conv} is not a suported type of convolution. Please use either '2D' or 'graph'")
-    supported_models = ['Basic']
+    supported_models = ['Basic', 'VGG']
     if model_type not in supported_models:
         raise ValueError(f"Unsuported NN architecture")
     
     if model_type == 'Basic':
         return ConvNet()
+    if model_type == 'VGG':
+        return vgg11()
+
 
 def train(model, dataloader, writer):
     model.train()
@@ -64,6 +67,7 @@ def train(model, dataloader, writer):
             print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
                   .format(epoch + 1, nb_epochs, i + 1, len(dataloader), loss.item(),
                           (correct / total) * 100))
+            # TODO write the mean accuracy over the 100 batchs
             writer.add_scalars('graph/accuracy', {'train': (correct / total) * 100}, epoch*500 + i)
     return losses.mean().item()
 
@@ -95,7 +99,7 @@ if __name__ == '__main__':
     starting_epoch = 0
     dataloaders = get_dataloaders('CIFAR10')
 
-    model = get_model('Basic')
+    model = get_model('VGG')
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
@@ -127,6 +131,7 @@ if __name__ == '__main__':
     # training loop
     for epoch in range(starting_epoch, nb_epochs):
         train(model, dataloaders['train'], writer)
+        # TODO save best model according to loss
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
