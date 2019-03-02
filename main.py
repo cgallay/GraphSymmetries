@@ -15,7 +15,6 @@ from models import ConvNet, vgg11
 batch_size = 100
 device = torch.device('cpu')
 CHECKPOINT_FOLDER = 'checkpoints/'
-restore_from_checkpoint = True
 
 def get_dataloaders(dataset='CIFAR10', transform=transforms.Compose([transforms.ToTensor()])):
     suported_datasets = ['CIFAR10']
@@ -98,7 +97,13 @@ def get_args():
         description='Train CNN.')
     parser.add_argument('--nb_epochs', type=int, default=5,
                         help='Number of epoch for the training.')
-
+    parser.add_argument('--log_dir', type=str, default='Graph',
+                        help='Path to the log directory.')
+    parser.add_argument('--checkpoint_dir', type=str, default='checkpoints',
+                        help='Path to the checkpoint directory.')
+    parser.add_argument('--restore', dest='restore_from_checkpoint', action='store_true',
+                        help='Restore from last checkpoint.')
+    
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -118,9 +123,9 @@ if __name__ == '__main__':
     else:
         print("Model runing on CPU")
     
-    
-    if restore_from_checkpoint:
-        path = os.path.join(CHECKPOINT_FOLDER, 'model.tar')
+    print(args.restore_from_checkpoint)
+    if args.restore_from_checkpoint:
+        path = os.path.join(args.checkpoint_dir, 'model.tar')
         try:
             checkpoint = torch.load(path)
             model.load_state_dict(checkpoint['model_state_dict'])
@@ -131,7 +136,7 @@ if __name__ == '__main__':
             print(f"Can't restore from checkpoint as checkpoint {path} doesn't exist")
 
     
-    writer = SummaryWriter(log_dir='Graph')
+    writer = SummaryWriter(log_dir=args.log_dir)
 
     if not os.path.isdir(CHECKPOINT_FOLDER):
         os.makedirs(CHECKPOINT_FOLDER)
