@@ -14,7 +14,6 @@ from models import ConvNet, vgg11
 # TODO add it to an argparser
 batch_size = 100
 device = torch.device('cpu')
-CHECKPOINT_FOLDER = 'checkpoints/'
 
 def get_dataloaders(dataset='CIFAR10', transform=transforms.Compose([transforms.ToTensor()])):
     suported_datasets = ['CIFAR10']
@@ -99,7 +98,7 @@ def get_args():
                         help='Number of epoch for the training.')
     parser.add_argument('--log_dir', type=str, default='Graph',
                         help='Path to the log directory.')
-    parser.add_argument('--checkpoint_dir', type=str, default='checkpoints',
+    parser.add_argument('--checkpoints_dir', type=str, default='checkpoints',
                         help='Path to the checkpoint directory.')
     parser.add_argument('--restore', dest='restore_from_checkpoint', action='store_true',
                         help='Restore from last checkpoint.')
@@ -125,7 +124,7 @@ if __name__ == '__main__':
     
     print(args.restore_from_checkpoint)
     if args.restore_from_checkpoint:
-        path = os.path.join(args.checkpoint_dir, 'model.tar')
+        path = os.path.join(args.checkpoints_dir, 'model.tar')
         try:
             checkpoint = torch.load(path)
             model.load_state_dict(checkpoint['model_state_dict'])
@@ -138,8 +137,8 @@ if __name__ == '__main__':
     
     writer = SummaryWriter(log_dir=args.log_dir)
 
-    if not os.path.isdir(CHECKPOINT_FOLDER):
-        os.makedirs(CHECKPOINT_FOLDER)
+    if not os.path.isdir(args.checkpoints_dir):
+        os.makedirs(args.checkpoints_dir)
 
     # training loop
     print(f"training for {args.nb_epochs} epochs")
@@ -150,5 +149,5 @@ if __name__ == '__main__':
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict()
-            }, os.path.join(CHECKPOINT_FOLDER, 'model.tar'))
+            }, os.path.join(args.checkpoints_dir, 'model.tar'))
         evaluate(model, dataloaders['test'], writer, epoch)
