@@ -100,6 +100,8 @@ def get_args():
                         help='Path to the log directory.')
     parser.add_argument('--checkpoints_dir', type=str, default='checkpoints',
                         help='Path to the checkpoint directory.')
+    parser.add_argument('--lr', type=float, default=0.001,
+                        help='Learning rate for the optimizer.')
     parser.add_argument('--restore', dest='restore_from_checkpoint', action='store_true',
                         help='Restore from last checkpoint.')
     
@@ -113,7 +115,7 @@ if __name__ == '__main__':
 
     model = get_model('VGG')
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     if torch.cuda.is_available():
         print("Model runing on CUDA")
