@@ -91,12 +91,5 @@ cfg = {
 def vgg11(pretrained=False, **kwargs):
     """VGG 11-layer model (configuration "A")
 
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    if pretrained:
-        kwargs['init_weights'] = False
-    model = VGG(make_layers(cfg['A']), **kwargs)
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['vgg11']))
-    return model
+    return VGG(make_layers(cfg['A']),num_classes=10, **kwargs)
