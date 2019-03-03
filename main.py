@@ -21,6 +21,9 @@ def get_dataloaders(dataset='CIFAR10', transform=transforms.Compose([transforms.
         raise ValueError(f"Dataset {dataset} is not supported")
 
     if dataset == 'CIFAR10':
+        transform = transforms.Compose([transforms.ToTensor(),
+                                        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                        std=[0.229, 0.224, 0.225])])
         X_train = torchvision.datasets.CIFAR10('dataset', train=True, transform=transform, download=True)
         X_test = torchvision.datasets.CIFAR10('dataset', train=False, transform=transform, download=True)
     
