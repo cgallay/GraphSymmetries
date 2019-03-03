@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
 
-from models import ConvNet, vgg11
+from models import ConvNet, vgg11, vgg11_2
 
 # TODO add it to an argparser
 batch_size = 100
@@ -53,6 +53,8 @@ def get_model(model_type='Basic', conv='2D'):
         return ConvNet2()
     if model_type == 'VGG':
         return vgg11()
+    if model_type == 'VGG2':
+        return vgg11_2()
 
 
 def train(model, dataloader, writer, epoch, nb_epochs):
