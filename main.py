@@ -43,7 +43,7 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
 def get_model(model_type='Basic', conv='2D'):
     if conv not in ['2D', 'graph']:
         raise ValueError(f"{conv} is not a suported type of convolution. Please use either '2D' or 'graph'")
-    supported_models = ['Basic', 'Basic2', 'VGG']
+    supported_models = ['Basic', 'Basic2', 'VGG', 'VGG2']
     if model_type not in supported_models:
         raise ValueError(f"Unsuported NN architecture")
     
