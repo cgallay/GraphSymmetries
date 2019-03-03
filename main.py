@@ -15,39 +15,42 @@ from models import ConvNet, vgg11
 batch_size = 100
 device = torch.device('cpu')
 
-def get_dataloaders(dataset='CIFAR10', transform=transforms.Compose([transforms.ToTensor()])):
+def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
     suported_datasets = ['CIFAR10']
     if dataset not in suported_datasets:
         raise ValueError(f"Dataset {dataset} is not supported")
 
     if dataset == 'CIFAR10':
-        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                        std=[0.229, 0.224, 0.225])
-        transform = transforms.Compose([transforms.ToTensor(),
-                                        normalize])
-        transform_train = transforms.Compose([
+        base_transform = [transforms.ToTensor(),
+                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                        std=[0.229, 0.224, 0.225])]
+        augmented_transform = [
             transforms.RandomHorizontalFlip(),
-            transforms.RandomCrop(32, 4),
-            transforms.ToTensor(),
-            normalize,
-        ])
+            transforms.RandomCrop(32, 4)]
+        transform = transforms.Compose(base_transform)
+        if data_augmentation:
+            transform_train = transform
+        else:
+            transform_train = transforms.Compose(augmented_transform + base_transform)
         X_train = torchvision.datasets.CIFAR10('dataset', train=True, transform=transform_train, download=True)
         X_test = torchvision.datasets.CIFAR10('dataset', train=False, transform=transform, download=True)
     
     dataloaders = dict()
     dataloaders['train'] = DataLoader(dataset=X_train, batch_size=batch_size, shuffle=True)
-    dataloaders['test'] = DataLoader(dataset=X_test, batch_size=batch_size, shuffle=True)
+    dataloaders['test'] = DataLoader(dataset=X_test, batch_size=batch_size, shuffle=False)
     return dataloaders
 
 def get_model(model_type='Basic', conv='2D'):
     if conv not in ['2D', 'graph']:
         raise ValueError(f"{conv} is not a suported type of convolution. Please use either '2D' or 'graph'")
-    supported_models = ['Basic', 'VGG']
+    supported_models = ['Basic', 'Basic2', 'VGG']
     if model_type not in supported_models:
         raise ValueError(f"Unsuported NN architecture")
     
     if model_type == 'Basic':
         return ConvNet()
+    if model_type == 'Basic2':
+        return ConvNet2()
     if model_type == 'VGG':
         return vgg11()
 
