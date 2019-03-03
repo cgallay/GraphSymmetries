@@ -68,7 +68,7 @@ class VGG2(nn.Module):
     VGG model 
     '''
     def __init__(self, features):
-        super(VGG, self).__init__()
+        super(VGG2, self).__init__()
         self.features = features
         self.classifier = nn.Sequential(
             nn.Dropout(),
