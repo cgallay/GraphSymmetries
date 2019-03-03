@@ -128,7 +128,7 @@ if __name__ == '__main__':
     starting_epoch = 0
     dataloaders = get_dataloaders('CIFAR10')
 
-    model = get_model('VGG')
+    model = get_model('VGG2')
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
