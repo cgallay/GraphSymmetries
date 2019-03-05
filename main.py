@@ -124,6 +124,10 @@ def get_args():
                         help='Path to the checkpoint directory.')
     parser.add_argument('--lr', type=float, default=0.001,
                         help='Learning rate for the optimizer.')
+    parser.add_argument('--weight_decay', '--wd', default=5e-4, type=float,
+                        help='weight decay (default: 5e-4)')
+    parser.add_argument('--data_augmentation', '--da', dest='data_augmentation', action='store_true',
+                        help='To set in order to apply data augmentation to the training set')
     parser.add_argument('--restore', dest='restore_from_checkpoint', action='store_true',
                         help='Restore from last checkpoint.')
     
@@ -133,11 +137,12 @@ if __name__ == '__main__':
     args = get_args()
     # load the model
     starting_epoch = 0
-    dataloaders = get_dataloaders('CIFAR10')
+    dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation)
 
     model = get_model('VGG2')
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
+                                weight_decay=args.weight_decay)
 
     if torch.cuda.is_available():
         print("Model runing on CUDA")
