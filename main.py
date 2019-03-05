@@ -12,7 +12,7 @@ from tensorboardX import SummaryWriter
 from models import ConvNet, vgg11, vgg11_2
 
 # TODO add it to an argparser
-batch_size = 100
+batch_size = 128
 device = torch.device('cpu')
 
 def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
@@ -36,8 +36,10 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
         X_test = torchvision.datasets.CIFAR10('dataset', train=False, transform=transform, download=True)
     
     dataloaders = dict()
-    dataloaders['train'] = DataLoader(dataset=X_train, batch_size=batch_size, shuffle=True)
-    dataloaders['test'] = DataLoader(dataset=X_test, batch_size=batch_size, shuffle=False)
+    dataloaders['train'] = DataLoader(dataset=X_train, batch_size=batch_size, shuffle=True,
+                                      num_workers=4)
+    dataloaders['test'] = DataLoader(dataset=X_test, batch_size=batch_size, shuffle=False,
+                                     num_workers=4)
     return dataloaders
 
 def get_model(model_type='Basic', conv='2D'):
@@ -122,7 +124,7 @@ def get_args():
                         help='Path to the log directory.')
     parser.add_argument('--checkpoints_dir', type=str, default='checkpoints',
                         help='Path to the checkpoint directory.')
-    parser.add_argument('--lr', type=float, default=0.001,
+    parser.add_argument('--lr', type=float, default=0.05,
                         help='Learning rate for the optimizer.')
     parser.add_argument('--weight_decay', '--wd', default=5e-4, type=float,
                         help='weight decay (default: 5e-4)')
