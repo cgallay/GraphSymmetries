@@ -29,9 +29,10 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
             transforms.RandomCrop(32, 4)]
         transform = transforms.Compose(base_transform)
         if data_augmentation:
-            transform_train = transform
-        else:
+            print("Augmenting data")
             transform_train = transforms.Compose(augmented_transform + base_transform)
+        else:
+            transform_train = transform
         X_train = torchvision.datasets.CIFAR10('dataset', train=True, transform=transform_train, download=True)
         X_test = torchvision.datasets.CIFAR10('dataset', train=False, transform=transform, download=True)
     
