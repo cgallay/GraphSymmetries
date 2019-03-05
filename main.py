@@ -106,9 +106,10 @@ def evaluate(model, dataloader, writer, epoch):
     writer.add_scalars('graph/loss', {'test': sum(test_loss)/ len(test_loss)}, (epoch+1)*500)
     writer.add_scalars('graph/accuracy', {'test': (correct_sum / total_sum) * 100}, (epoch+1)*500)
 
-def adjust_learning_rate(optimizer, epoch):
+def adjust_learning_rate(optimizer, epoch, writer, args):
     """Sets the learning rate to the initial LR decayed by 2 every 30 epochs"""
     lr = args.lr * (0.5 ** (epoch // 30))
+    writer.add_scalar('learning_rate', lr, epoch)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -166,7 +167,7 @@ if __name__ == '__main__':
     # training loop
     print(f"training for {args.nb_epochs} epochs")
     for epoch in range(starting_epoch, args.nb_epochs):
-        adjust_learning_rate(optimizer, epoch)
+        adjust_learning_rate(optimizer, epoch, writer, args)
         train(model, dataloaders['train'], writer, epoch, args.nb_epochs)
         # TODO save best model according to loss
         torch.save({
