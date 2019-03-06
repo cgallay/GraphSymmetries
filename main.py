@@ -6,6 +6,7 @@ import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+from torch.optim.lr_scheduler import MultiStepLR
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
 
@@ -25,8 +26,7 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
 
     if dataset == 'CIFAR10':
         base_transform = [transforms.ToTensor(),
-                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                        std=[0.229, 0.224, 0.225])]
+                          transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))]
         augmented_transform = [
             transforms.RandomHorizontalFlip(),
             transforms.RandomCrop(32, 4)]
@@ -111,19 +111,6 @@ def evaluate(model, dataloader, writer, epoch):
     writer.add_scalars('graph/loss', {'test': sum(test_loss)/ len(test_loss)}, (epoch+1)*len(dataloaders['train']))
     writer.add_scalars('graph/accuracy', {'test': (correct_sum / total_sum) * 100}, (epoch+1)*len(dataloaders['train']))
 
-def adjust_learning_rate(optimizer, epoch, writer, args):
-    """Sets the learning rate to the initial LR decayed by 2 every 30 epochs"""
-    power = 0
-    if epoch > 300:
-        power = 3
-    if epoch > 250:
-        power = 2
-    if epoch > 200:
-        power = 1
-    lr = args.lr * (0.1 ** (power))
-    writer.add_scalar('learning_rate', lr, epoch)
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -145,6 +132,10 @@ def get_args():
                         help='To set in order to apply data augmentation to the training set')
     parser.add_argument('--restore', dest='restore_from_checkpoint', action='store_true',
                         help='Restore from last checkpoint.')
+    parser.add_argument('--learning_steps', '--ls', nargs='+', default=[], type=int,
+                        help='Milestone when to decay learning rate by learing_gamma.')
+    parser.add_argument('--learning_gamma', '--lg', type=float, default=0.1,
+                        help='Learning rate mutiplicator per milestone.')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -160,7 +151,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9,
                                 weight_decay=args.weight_decay)
-
+    
     if torch.cuda.is_available():
         print("Model runing on CUDA")
         _ = model.cuda()
@@ -175,6 +166,7 @@ if __name__ == '__main__':
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             starting_epoch = checkpoint['epoch']
+            # TODO restore learning_steps
             print(f"Model restored from epoch {starting_epoch}")
         except FileNotFoundError:
             print(f"Can't restore from checkpoint as checkpoint {path} doesn't exist")
@@ -183,10 +175,13 @@ if __name__ == '__main__':
     if not os.path.isdir(args.checkpoints_dir):
         os.makedirs(args.checkpoints_dir)
 
+    scheduler = MultiStepLR(optimizer, milestones=args.learning_steps, gamma=args.learning_gamma,
+                            last_epoch=starting_epoch-1)
     # training loop
     print(f"training for {args.nb_epochs} epochs")
     for epoch in range(starting_epoch, args.nb_epochs):
-        adjust_learning_rate(optimizer, epoch, writer, args)
+        scheduler.step()
+        writer.add_scalar('learning_rate', scheduler.get_lr(), epoch)
         train(model, dataloaders['train'], writer, epoch, args.nb_epochs)
         # TODO save best model according to loss
         torch.save({
