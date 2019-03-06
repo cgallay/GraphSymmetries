@@ -14,6 +14,7 @@ from models import ConvNet, vgg11, vgg11_2
 # TODO add it to an argparser
 batch_size = 128
 device = torch.device('cpu')
+supported_models = ['Basic', 'Basic2', 'VGG', 'VGG2']
 
 def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
     suported_datasets = ['CIFAR10']
@@ -46,7 +47,6 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
 def get_model(model_type='Basic', conv='2D'):
     if conv not in ['2D', 'graph']:
         raise ValueError(f"{conv} is not a suported type of convolution. Please use either '2D' or 'graph'")
-    supported_models = ['Basic', 'Basic2', 'VGG', 'VGG2']
     if model_type not in supported_models:
         raise ValueError(f"Unsuported NN architecture")
     
@@ -119,6 +119,9 @@ def adjust_learning_rate(optimizer, epoch, writer, args):
 def get_args():
     parser = argparse.ArgumentParser(
         description='Train CNN.')
+    
+    parser.add_argument('--arch', type=str, choices=supported_models, required=True,
+                        help='model name parameter')
     parser.add_argument('--nb_epochs', type=int, default=5,
                         help='Number of epoch for the training.')
     parser.add_argument('--log_dir', type=str, default='Graph',
@@ -133,7 +136,6 @@ def get_args():
                         help='To set in order to apply data augmentation to the training set')
     parser.add_argument('--restore', dest='restore_from_checkpoint', action='store_true',
                         help='Restore from last checkpoint.')
-    
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -142,7 +144,7 @@ if __name__ == '__main__':
     starting_epoch = 0
     dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation)
 
-    model = get_model('VGG2')
+    model = get_model(args.arch)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
                                 weight_decay=args.weight_decay)
