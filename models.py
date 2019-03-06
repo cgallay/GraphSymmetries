@@ -7,16 +7,19 @@ class ModelC(nn.Module):
     def __init__(self):
         super(ModelC, self).__init__()
         self.conv = nn.Sequential(
+            nn.Dropout(0.2),
             nn.Conv2d(3, 96, kernel_size=3),
             nn.ReLU(),
             nn.Conv2d(96, 96, kernel_size=3),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Dropout(0.5),
             nn.Conv2d(96, 192, kernel_size=3),
             nn.ReLU(),
             nn.Conv2d(192, 192, kernel_size=3),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Dropout(0.5),
             nn.Conv2d(192, 192, kernel_size=3),
             nn.ReLU(),
             nn.Conv2d(192, 192, kernel_size=1),
