@@ -2,3 +2,4 @@ Graph/
 dataset/
 __pycache__/
 *.pyc
+.vscode
