@@ -73,7 +73,7 @@ def train(model, dataloader, writer, epoch, nb_epochs):
         outputs = model(images)
         loss = criterion(outputs, labels)
         losses[i] = loss.item()
-        writer.add_scalars('graph/loss', {'train': loss.item()}, epoch*500 + i)
+        writer.add_scalars('graph/loss', {'train': loss.item()}, epoch*len(dataloaders['train']) + i)
         
         optimizer.zero_grad()
         loss.backward()
