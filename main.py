@@ -82,13 +82,11 @@ def train(model, dataloader, writer, epoch, nb_epochs):
         total = labels.size(0)
         _, predicted = torch.max(outputs.data, 1)
         correct = (predicted == labels).sum().item()
-        
+        writer.add_scalars('graph/accuracy', {'train': (correct / total) * 100}, epoch*len(dataloaders['train']) + i)
         if (i + 1) % 100 == 0:
             print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
                   .format(epoch + 1, nb_epochs, i + 1, len(dataloader), loss.item(),
                           (correct / total) * 100))
-            # TODO write the mean accuracy over the 100 batchs
-            writer.add_scalars('graph/accuracy', {'train': (correct / total) * 100}, epoch*500 + i)
     return losses.mean().item()
 
 def evaluate(model, dataloader, writer, epoch):
@@ -110,8 +108,8 @@ def evaluate(model, dataloader, writer, epoch):
             correct_sum += correct
             total_sum += total
 
-    writer.add_scalars('graph/loss', {'test': sum(test_loss)/ len(test_loss)}, (epoch+1)*500)
-    writer.add_scalars('graph/accuracy', {'test': (correct_sum / total_sum) * 100}, (epoch+1)*500)
+    writer.add_scalars('graph/loss', {'test': sum(test_loss)/ len(test_loss)}, (epoch+1)*len(dataloaders['train']))
+    writer.add_scalars('graph/accuracy', {'test': (correct_sum / total_sum) * 100}, (epoch+1)*len(dataloaders['train']))
 
 def adjust_learning_rate(optimizer, epoch, writer, args):
     """Sets the learning rate to the initial LR decayed by 2 every 30 epochs"""
@@ -160,7 +158,7 @@ if __name__ == '__main__':
     writer.add_graph(model, next(iter(dataloaders['train']))[0], False)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
+    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9,
                                 weight_decay=args.weight_decay)
 
     if torch.cuda.is_available():
