@@ -9,12 +9,12 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
 
-from models import ConvNet, vgg11, vgg11_2
+from models import ConvNet, vgg11, vgg11_2, ModelC
 
 # TODO add it to an argparser
 batch_size = 128
 device = torch.device('cpu')
-supported_models = ['Basic', 'Basic2', 'VGG', 'VGG2']
+supported_models = ['Basic', 'Basic2', 'VGG', 'VGG2', 'ModelC']
 
 def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
     suported_datasets = ['CIFAR10']
@@ -58,6 +58,8 @@ def get_model(model_type='Basic', conv='2D'):
         return vgg11()
     if model_type == 'VGG2':
         return vgg11_2()
+    if model_type == 'ModelC':
+        return ModelC()
 
 
 def train(model, dataloader, writer, epoch, nb_epochs):
@@ -111,7 +113,14 @@ def evaluate(model, dataloader, writer, epoch):
 
 def adjust_learning_rate(optimizer, epoch, writer, args):
     """Sets the learning rate to the initial LR decayed by 2 every 30 epochs"""
-    lr = args.lr * (0.5 ** (epoch // 30))
+    power = 0
+    if epoch > 300:
+        power = 3
+    if epoch > 250:
+        power = 2
+    if epoch > 200:
+        power = 1
+    lr = args.lr * (0.1 ** (power))
     writer.add_scalar('learning_rate', lr, epoch)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
@@ -145,6 +154,7 @@ if __name__ == '__main__':
     dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation)
 
     model = get_model(args.arch)
+
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
                                 weight_decay=args.weight_decay)

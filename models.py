@@ -2,6 +2,39 @@ import math
 
 import torch.nn as nn
 
+
+class ModelC(nn.Module):
+    def __init__(self):
+        super(ModelC, self).__init__()
+        self.conv = nn.Sequential(
+            nn.Dropout(0.2),
+            nn.Conv2d(3, 96, kernel_size=3),
+            nn.ReLU(),
+            nn.Conv2d(96, 96, kernel_size=3),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Dropout(0.5),
+            nn.Conv2d(96, 192, kernel_size=3),
+            nn.ReLU(),
+            nn.Conv2d(192, 192, kernel_size=3),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Dropout(0.5),
+            nn.Conv2d(192, 192, kernel_size=3),
+            nn.ReLU(),
+            nn.Conv2d(192, 192, kernel_size=1),
+            nn.ReLU(),
+            nn.Conv2d(192, 10, kernel_size=1),
+            nn.ReLU(),
+            nn.AvgPool2d(kernel_size=6)
+            # Softmax is done in CrossEntropyLoss
+        )
+
+    def forward(self, x):
+        out = self.conv(x)
+        out = out.reshape((-1, 10))
+        return out
+
 class ConvNet(nn.Module):
     def __init__(self):
         super(ConvNet, self).__init__()
