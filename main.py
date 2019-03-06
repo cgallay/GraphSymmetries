@@ -151,6 +151,7 @@ if __name__ == '__main__':
     args = get_args()
     # load the model
     starting_epoch = 0
+    writer = SummaryWriter(log_dir=args.log_dir)
     dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation)
 
     model = get_model(args.arch)
@@ -179,8 +180,6 @@ if __name__ == '__main__':
         except FileNotFoundError:
             print(f"Can't restore from checkpoint as checkpoint {path} doesn't exist")
 
-    
-    writer = SummaryWriter(log_dir=args.log_dir)
 
     if not os.path.isdir(args.checkpoints_dir):
         os.makedirs(args.checkpoints_dir)
