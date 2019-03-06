@@ -9,12 +9,14 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
 
-from models import ConvNet, vgg11, vgg11_2, ModelC
+# from models import ConvNet, vgg11, vgg11_2, ModelC
+from models.VGG import vgg11
+from models.resnet import ResNet18
 
 # TODO add it to an argparser
 batch_size = 128
 device = torch.device('cpu')
-supported_models = ['Basic', 'Basic2', 'VGG', 'VGG2', 'ModelC']
+supported_models = ['Basic', 'Basic2', 'VGG', 'ModelC', 'ResNet18']
 
 def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
     suported_datasets = ['CIFAR10']
@@ -56,10 +58,10 @@ def get_model(model_type='Basic', conv='2D'):
         return ConvNet2()
     if model_type == 'VGG':
         return vgg11()
-    if model_type == 'VGG2':
-        return vgg11_2()
     if model_type == 'ModelC':
         return ModelC()
+    if model_type == 'ResNet18':
+        return ResNet18()
 
 
 def train(model, dataloader, writer, epoch, nb_epochs):
