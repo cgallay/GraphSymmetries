@@ -10,7 +10,8 @@ python3.6 main.py --arch $1
 python3.6 main.py --arch $1
 ;;
 *)
-echo "Model not found"
+echo "Best param not found for this model default param will be used."
+python3.6 main.py --arch $1
 esac
 
 
