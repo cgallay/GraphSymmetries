@@ -154,6 +154,7 @@ if __name__ == '__main__':
     dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation)
 
     model = get_model(args.arch)
+    writer.add_graph(model, next(iter(dataloaders['train'])), True)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
