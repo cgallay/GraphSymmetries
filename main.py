@@ -170,7 +170,6 @@ if __name__ == '__main__':
     else:
         print("Model runing on CPU")
     
-    print(args.restore_from_checkpoint)
     if args.restore_from_checkpoint:
         path = os.path.join(args.checkpoints_dir, 'model.tar')
         try:
