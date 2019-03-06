@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
 
-from models import ConvNet, vgg11, vgg11_2
+from models import ConvNet, vgg11, vgg11_2, ModelC
 
 # TODO add it to an argparser
 batch_size = 128
@@ -142,7 +142,7 @@ if __name__ == '__main__':
     starting_epoch = 0
     dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation)
 
-    model = get_model('VGG2')
+    model = ModelC()
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
                                 weight_decay=args.weight_decay)
