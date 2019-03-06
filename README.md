@@ -26,9 +26,5 @@ For a local installation, follow the below instructions.
    pip install -r requirements.txt
    ```
 
-
-
 ## License
 The content of this repository is released under the terms of the [MIT license](LICENCE.md)
-
-[cgallay]: 
