@@ -7,7 +7,6 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import MultiStepLR
-from tqdm import tqdm
 from tensorboardX import SummaryWriter
 
 # from models import ConvNet, vgg11, vgg11_2, ModelC
