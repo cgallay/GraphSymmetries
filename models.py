@@ -4,6 +4,9 @@ import torch.nn as nn
 
 
 class ModelC(nn.Module):
+    """
+    From https://arxiv.org/pdf/1412.6806v3.pdf
+    """
     def __init__(self):
         super(ModelC, self).__init__()
         self.conv = nn.Sequential(
