@@ -9,10 +9,10 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
 
-from models import ConvNet, vgg11
+from models import ConvNet, vgg11, vgg11_2
 
 # TODO add it to an argparser
-batch_size = 100
+batch_size = 128
 device = torch.device('cpu')
 
 def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
@@ -29,21 +29,24 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
             transforms.RandomCrop(32, 4)]
         transform = transforms.Compose(base_transform)
         if data_augmentation:
-            transform_train = transform
-        else:
+            print("Augmenting data")
             transform_train = transforms.Compose(augmented_transform + base_transform)
+        else:
+            transform_train = transform
         X_train = torchvision.datasets.CIFAR10('dataset', train=True, transform=transform_train, download=True)
         X_test = torchvision.datasets.CIFAR10('dataset', train=False, transform=transform, download=True)
     
     dataloaders = dict()
-    dataloaders['train'] = DataLoader(dataset=X_train, batch_size=batch_size, shuffle=True)
-    dataloaders['test'] = DataLoader(dataset=X_test, batch_size=batch_size, shuffle=False)
+    dataloaders['train'] = DataLoader(dataset=X_train, batch_size=batch_size, shuffle=True,
+                                      num_workers=4)
+    dataloaders['test'] = DataLoader(dataset=X_test, batch_size=batch_size, shuffle=False,
+                                     num_workers=4)
     return dataloaders
 
 def get_model(model_type='Basic', conv='2D'):
     if conv not in ['2D', 'graph']:
         raise ValueError(f"{conv} is not a suported type of convolution. Please use either '2D' or 'graph'")
-    supported_models = ['Basic', 'Basic2', 'VGG']
+    supported_models = ['Basic', 'Basic2', 'VGG', 'VGG2']
     if model_type not in supported_models:
         raise ValueError(f"Unsuported NN architecture")
     
@@ -53,6 +56,8 @@ def get_model(model_type='Basic', conv='2D'):
         return ConvNet2()
     if model_type == 'VGG':
         return vgg11()
+    if model_type == 'VGG2':
+        return vgg11_2()
 
 
 def train(model, dataloader, writer, epoch, nb_epochs):
@@ -104,6 +109,13 @@ def evaluate(model, dataloader, writer, epoch):
     writer.add_scalars('graph/loss', {'test': sum(test_loss)/ len(test_loss)}, (epoch+1)*500)
     writer.add_scalars('graph/accuracy', {'test': (correct_sum / total_sum) * 100}, (epoch+1)*500)
 
+def adjust_learning_rate(optimizer, epoch, writer, args):
+    """Sets the learning rate to the initial LR decayed by 2 every 30 epochs"""
+    lr = args.lr * (0.5 ** (epoch // 30))
+    writer.add_scalar('learning_rate', lr, epoch)
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
 def get_args():
     parser = argparse.ArgumentParser(
         description='Train CNN.')
@@ -113,8 +125,12 @@ def get_args():
                         help='Path to the log directory.')
     parser.add_argument('--checkpoints_dir', type=str, default='checkpoints',
                         help='Path to the checkpoint directory.')
-    parser.add_argument('--lr', type=float, default=0.001,
+    parser.add_argument('--lr', type=float, default=0.05,
                         help='Learning rate for the optimizer.')
+    parser.add_argument('--weight_decay', '--wd', default=5e-4, type=float,
+                        help='weight decay (default: 5e-4)')
+    parser.add_argument('--data_augmentation', '--da', dest='data_augmentation', action='store_true',
+                        help='To set in order to apply data augmentation to the training set')
     parser.add_argument('--restore', dest='restore_from_checkpoint', action='store_true',
                         help='Restore from last checkpoint.')
     
@@ -124,11 +140,12 @@ if __name__ == '__main__':
     args = get_args()
     # load the model
     starting_epoch = 0
-    dataloaders = get_dataloaders('CIFAR10')
+    dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation)
 
-    model = get_model('VGG')
+    model = get_model('VGG2')
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
+                                weight_decay=args.weight_decay)
 
     if torch.cuda.is_available():
         print("Model runing on CUDA")
@@ -158,6 +175,7 @@ if __name__ == '__main__':
     # training loop
     print(f"training for {args.nb_epochs} epochs")
     for epoch in range(starting_epoch, args.nb_epochs):
+        adjust_learning_rate(optimizer, epoch, writer, args)
         train(model, dataloaders['train'], writer, epoch, args.nb_epochs)
         # TODO save best model according to loss
         torch.save({
