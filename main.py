@@ -111,7 +111,14 @@ def evaluate(model, dataloader, writer, epoch):
 
 def adjust_learning_rate(optimizer, epoch, writer, args):
     """Sets the learning rate to the initial LR decayed by 2 every 30 epochs"""
-    lr = args.lr * (0.5 ** (epoch // 30))
+    power = 0
+    if epoch > 300:
+        power = 3
+    if epoch > 250:
+        power = 2
+    if epoch > 200:
+        power = 1
+    lr = args.lr * (0.1 ** (power))
     writer.add_scalar('learning_rate', lr, epoch)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
