@@ -180,7 +180,7 @@ if __name__ == '__main__':
     print(f"training for {args.nb_epochs} epochs")
     for epoch in range(starting_epoch, args.nb_epochs):
         scheduler.step()
-        writer.add_scalar('learning_rate', scheduler.get_lr(), epoch)
+        writer.add_scalar('learning_rate', scheduler.get_lr()[0], epoch)
         train(model, dataloaders['train'], writer, epoch, args.nb_epochs)
         # TODO save best model according to loss
         torch.save({
