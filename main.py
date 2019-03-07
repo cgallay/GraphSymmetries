@@ -9,14 +9,14 @@ from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import MultiStepLR
 from tensorboardX import SummaryWriter
 
-# from models import ConvNet, vgg11, vgg11_2, ModelC
 from models.VGG import vgg11
 from models.resnet import ResNet18
+from models.classics import ConvNet
 
 # TODO add it to an argparser
 batch_size = 128
 device = torch.device('cpu')
-supported_models = ['Basic', 'Basic2', 'VGG', 'ModelC', 'ResNet18']
+supported_models = ['ConvNet', 'VGG', 'ResNet18']
 
 def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
     suported_datasets = ['CIFAR10']
@@ -51,14 +51,10 @@ def get_model(model_type='Basic', conv='2D'):
     if model_type not in supported_models:
         raise ValueError(f"Unsuported NN architecture")
     
-    if model_type == 'Basic':
+    if model_type == 'ConvNet':
         return ConvNet()
-    if model_type == 'Basic2':
-        return ConvNet2()
     if model_type == 'VGG':
         return vgg11()
-    if model_type == 'ModelC':
-        return ModelC()
     if model_type == 'ResNet18':
         return ResNet18()
 
