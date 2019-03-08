@@ -12,7 +12,7 @@ def create_laplacian(size_x, size_y, device='cpu'):
     graph = pg.graphs.Grid2d(size_x, size_y)
     laplacian = graph.L.astype(np.float32)
     laplacian = prepare_laplacian(laplacian)
-    return laplacian
+    return laplacian.to(device)
 
 # TODO move
 def prepare_laplacian(laplacian):
