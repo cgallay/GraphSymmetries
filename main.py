@@ -12,13 +12,14 @@ from tensorboardX import SummaryWriter
 from models.VGG import vgg11
 from models.resnet import ResNet18
 from models.classics import ConvNet
+from utils.transforms import ToGraph
 
 # TODO add it to an argparser
 batch_size = 128
 device = torch.device('cpu')
 supported_models = ['ConvNet', 'VGG', 'ResNet18']
 
-def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
+def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
     suported_datasets = ['CIFAR10']
     if dataset not in suported_datasets:
         raise ValueError(f"Dataset {dataset} is not supported")
@@ -35,6 +36,9 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
             transform_train = transforms.Compose(augmented_transform + base_transform)
         else:
             transform_train = transform
+        if on_graph:
+            transform_train = ToGraph()
+            transform = ToGraph()
         X_train = torchvision.datasets.CIFAR10('dataset', train=True, transform=transform_train, download=True)
         X_test = torchvision.datasets.CIFAR10('dataset', train=False, transform=transform, download=True)
     
@@ -45,14 +49,12 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False):
                                      num_workers=4)
     return dataloaders
 
-def get_model(model_type='Basic', conv='2D'):
-    if conv not in ['2D', 'graph']:
-        raise ValueError(f"{conv} is not a suported type of convolution. Please use either '2D' or 'graph'")
+def get_model(model_type='Basic', on_graph=False):
     if model_type not in supported_models:
         raise ValueError(f"Unsuported NN architecture")
     
     if model_type == 'ConvNet':
-        return ConvNet()
+        return ConvNet(on_graph=on_graph)
     if model_type == 'VGG':
         return vgg11()
     if model_type == 'ResNet18':
@@ -124,13 +126,15 @@ def get_args():
     parser.add_argument('--weight_decay', '--wd', default=5e-4, type=float,
                         help='weight decay (default: 5e-4)')
     parser.add_argument('--data_augmentation', '--da', dest='data_augmentation', action='store_true',
-                        help='To set in order to apply data augmentation to the training set')
+                        help='To set in order to apply data augmentation to the training set.')
     parser.add_argument('--restore', dest='restore_from_checkpoint', action='store_true',
                         help='Restore from last checkpoint.')
     parser.add_argument('--learning_steps', '--ls', nargs='+', default=[], type=int,
                         help='Milestone when to decay learning rate by learing_gamma.')
     parser.add_argument('--learning_gamma', '--lg', type=float, default=0.1,
                         help='Learning rate mutiplicator per milestone.')
+    parser.add_argument('--on_graph', dest='on_graph', action='store_true',
+                        help='Use a grid graph to represent the image and perform convolutions on it.')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -138,10 +142,14 @@ if __name__ == '__main__':
     # load the model
     starting_epoch = 0
     writer = SummaryWriter(log_dir=args.log_dir)
-    dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation)
+    dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation,
+                                  on_graph=args.on_graph)
 
-    model = get_model(args.arch)
-    writer.add_graph(model, next(iter(dataloaders['train']))[0], False)
+    model = get_model(args.arch, args.on_graph)
+    try:
+        writer.add_graph(model, next(iter(dataloaders['train']))[0], False)
+    except:
+        print("Graph could not be loged in tensordboard.")
 
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9,
