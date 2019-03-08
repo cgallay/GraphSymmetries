@@ -147,9 +147,9 @@ if __name__ == '__main__':
     model = None
     if torch.cuda.is_available():
         print("Model runing on CUDA")
+        device = torch.device('cuda')
         model = get_model(args.arch, args.on_graph, device=device)
         _ = model.cuda()
-        device = torch.device('cuda')
     else:
         print("Model runing on CPU")
         model = get_model(args.arch, args.on_graph, device=device)
