@@ -144,15 +144,16 @@ if __name__ == '__main__':
     writer = SummaryWriter(log_dir=args.log_dir)
     dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation,
                                   on_graph=args.on_graph)
-
+    model = None
     if torch.cuda.is_available():
         print("Model runing on CUDA")
+        model = get_model(args.arch, args.on_graph, device=device)
         _ = model.cuda()
         device = torch.device('cuda')
     else:
         print("Model runing on CPU")
-
-    model = get_model(args.arch, args.on_graph, device=device)
+        model = get_model(args.arch, args.on_graph, device=device)
+    
     try:
         writer.add_graph(model, next(iter(dataloaders['train']))[0], False)
     except:
