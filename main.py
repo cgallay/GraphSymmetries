@@ -37,8 +37,8 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
         else:
             transform_train = transform
         if on_graph:
-            transform_train = ToGraph()
-            transform = ToGraph()
+            transform_train = transforms.Compose(base_transform + [ToGraph()])
+            transform = transforms.Compose(base_transform + [ToGraph()])
         X_train = torchvision.datasets.CIFAR10('dataset', train=True, transform=transform_train, download=True)
         X_test = torchvision.datasets.CIFAR10('dataset', train=False, transform=transform, download=True)
     

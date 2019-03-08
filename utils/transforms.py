@@ -8,17 +8,18 @@ class ToGraph(object):
     def __init__(self, create_graph=False):
         self.create_graph = create_graph
 
-    def __call__(self, image):
-        np_img = np.asarray(image)
-        x = np_img.astype(np.float32)  # Faster computations with float32.
-        x = torch.from_numpy(x)
+    def __call__(self, x):
+        # np_img = np.asarray(image)
+        # x = np_img.astype(np.float32) / 255.0  # Faster computations with float32.
+        # x = torch.from_numpy(x)
         # TODO: think about a better memory representation of the singal with 3 features.
         # Each feature being the color.
+        x = x.permute(1, 2, 0)
         signal = x.view(-1, 3)
 
         if not self.create_graph:
             return signal
-        laplacian = create_laplacian(*np_img.shape[:2])
+        laplacian = create_laplacian(*x.shape[1:3])
         
         return (laplacian, signal)
 

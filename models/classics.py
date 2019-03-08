@@ -4,7 +4,7 @@ import torch.nn as nn
 import pygsp as pg
 from scipy import sparse
 
-from .layers.graph_conv import FixGraphConv
+from models.layers.graph_conv import FixGraphConv
 
 
 # TODO move
