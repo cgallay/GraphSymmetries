@@ -49,12 +49,12 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
                                      num_workers=4)
     return dataloaders
 
-def get_model(model_type='Basic', on_graph=False):
+def get_model(model_type='Basic', on_graph=False, device='cpu'):
     if model_type not in supported_models:
         raise ValueError(f"Unsuported NN architecture")
     
     if model_type == 'ConvNet':
-        return ConvNet(on_graph=on_graph)
+        return ConvNet(on_graph=on_graph, device=device)
     if model_type == 'VGG':
         return vgg11()
     if model_type == 'ResNet18':
@@ -145,7 +145,14 @@ if __name__ == '__main__':
     dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation,
                                   on_graph=args.on_graph)
 
-    model = get_model(args.arch, args.on_graph)
+    if torch.cuda.is_available():
+        print("Model runing on CUDA")
+        _ = model.cuda()
+        device = torch.device('cuda')
+    else:
+        print("Model runing on CPU")
+
+    model = get_model(args.arch, args.on_graph, device=device)
     try:
         writer.add_graph(model, next(iter(dataloaders['train']))[0], False)
     except:
@@ -154,13 +161,6 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9,
                                 weight_decay=args.weight_decay)
-    
-    if torch.cuda.is_available():
-        print("Model runing on CUDA")
-        _ = model.cuda()
-        device = torch.device('cuda')
-    else:
-        print("Model runing on CPU")
     
     if args.restore_from_checkpoint:
         path = os.path.join(args.checkpoints_dir, 'model.tar')

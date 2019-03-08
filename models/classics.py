@@ -8,7 +8,7 @@ from models.layers.graph_conv import FixGraphConv
 
 
 # TODO move
-def create_laplacian(size_x, size_y):
+def create_laplacian(size_x, size_y, device='cpu'):
     graph = pg.graphs.Grid2d(size_x, size_y)
     laplacian = graph.L.astype(np.float32)
     laplacian = prepare_laplacian(laplacian)
@@ -49,10 +49,11 @@ def prepare_laplacian(laplacian):
     return laplacian
 
 
-def get_conv(features_in, features_out, input_shape=(32,32), kernel_size=3, padding=0, on_graph=False):
+def get_conv(features_in, features_out, input_shape=(32,32), kernel_size=3,
+             padding=0, on_graph=False, device='cpu'):
     if on_graph:
         kernel_size = (kernel_size // 2) + 1
-        laplacian = create_laplacian(*input_shape)
+        laplacian = create_laplacian(*input_shape, device=device)
         return FixGraphConv(features_in, features_out, laplacian=laplacian,
                             kernel_size=kernel_size)
     else:
@@ -87,15 +88,15 @@ def get_pool(kernel_size=3, stride=2, padding=1, input_shape=(32, 32), on_graph=
 
 
 class ConvNet(nn.Module):
-    def __init__(self, input_shape=(32,32), on_graph=False):
+    def __init__(self, input_shape=(32,32), on_graph=False, device='cpu'):
         super(ConvNet, self).__init__()
         self.layer1 = nn.Sequential(
             nn.Dropout(0.2),
             get_conv(3, 96, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph),  # out 32x32
+                     padding=1, on_graph=on_graph, device=device),  # out 32x32
             nn.ReLU(),
             get_conv(96, 96, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph),  # out 32x32
+                     padding=1, on_graph=on_graph, device=device),  # out 32x32
             nn.ReLU(),
             get_pool(kernel_size=3, stride=2, padding=1, on_graph=on_graph)  # out 16x16 
         )
@@ -103,10 +104,10 @@ class ConvNet(nn.Module):
         self.layer2 = nn.Sequential(
             nn.Dropout(0.5),
             get_conv(96, 192, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph),  # out 16x16
+                     padding=1, on_graph=on_graph, device=device),  # out 16x16
             nn.ReLU(),
             get_conv(192, 192, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph),  # out 16x16
+                     padding=1, on_graph=on_graph, device=device),  # out 16x16
             nn.ReLU(),
             get_pool(kernel_size=3, stride=2, padding=1, on_graph=on_graph,
                      input_shape=input_shape)  # out 8x8
@@ -115,9 +116,9 @@ class ConvNet(nn.Module):
         self.layer3 = nn.Sequential(
             nn.Dropout(0.5),
             get_conv(192, 192, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph),  # out 8x8
+                     padding=1, on_graph=on_graph, device=device),  # out 8x8
             nn.ReLU(),
-            get_conv(192, 10, input_shape=input_shape, kernel_size=1,
+            get_conv(192, 10, input_shape=input_shape, device=device, kernel_size=1,
                      on_graph=on_graph),  # out 8x8
             nn.ReLU()
         )
