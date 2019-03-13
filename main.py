@@ -6,7 +6,7 @@ import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
-from torch.optim.lr_scheduler import MultiStepLR
+from torch.optim.lr_scheduler import MultiStepLR, ExponentialLR
 from tensorboardX import SummaryWriter
 
 from models.VGG import vgg11
@@ -84,7 +84,10 @@ def train(model, dataloader, writer, epoch, nb_epochs):
             print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
                   .format(epoch + 1, nb_epochs, i + 1, len(dataloader), loss.item(),
                           (correct / total) * 100))
-    return losses.mean().item()
+    metrics = {
+        'loss': losses.mean().item()
+    }
+    return metrics
 
 def evaluate(model, dataloader, writer, epoch):
     # TODO add echo to eval
@@ -135,6 +138,9 @@ def get_args():
                         help='Learning rate mutiplicator per milestone.')
     parser.add_argument('--on_graph', dest='on_graph', action='store_true',
                         help='Use a grid graph to represent the image and perform convolutions on it.')
+    parser.add_argument('--explore', dest='explore', action='store_true',
+                        help='Exploration of the learning rate mode.')
+    
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -179,14 +185,18 @@ if __name__ == '__main__':
     if not os.path.isdir(args.checkpoints_dir):
         os.makedirs(args.checkpoints_dir)
 
-    scheduler = MultiStepLR(optimizer, milestones=args.learning_steps, gamma=args.learning_gamma,
+    if args.explore:
+        scheduler = ExponentialLR(optimizer, 2.0)
+    else:
+        scheduler = MultiStepLR(optimizer, milestones=args.learning_steps, gamma=args.learning_gamma,
                             last_epoch=starting_epoch-1)
     # training loop
     print(f"training for {args.nb_epochs} epochs")
     for epoch in range(starting_epoch, args.nb_epochs):
         scheduler.step()
-        writer.add_scalar('learning_rate', scheduler.get_lr()[0], epoch)
-        train(model, dataloaders['train'], writer, epoch, args.nb_epochs)
+        writer.add_scalar('learning_rate/lr', scheduler.get_lr()[0], epoch)
+
+        metrics = train(model, dataloaders['train'], writer, epoch, args.nb_epochs)
         # TODO save best model according to loss
         torch.save({
             'epoch': epoch,
@@ -194,3 +204,5 @@ if __name__ == '__main__':
             'optimizer_state_dict': optimizer.state_dict()
             }, os.path.join(args.checkpoints_dir, 'model.tar'))
         evaluate(model, dataloaders['test'], writer, epoch)
+        if args.explore:
+            writer.add_scalar('learning_rate/search', metrics['loss'], scheduler.get_lr()[0])
