@@ -211,8 +211,8 @@ if __name__ == '__main__':
         evaluate(model, dataloaders['test'], writer, epoch)
         if args.explore:
             fig=plt.figure()
-            ax.clear()
             ax = fig.add_subplot(1,1,1)
+            ax.clear()
             ax.set_xlabel('Losses')
             ax.set_ylabel('learning rate')
             ax.plot(losses, learning_rates)
