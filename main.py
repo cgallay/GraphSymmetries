@@ -25,22 +25,27 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
         raise ValueError(f"Dataset {dataset} is not supported")
 
     if dataset == 'CIFAR10':
-        base_transform = [transforms.ToTensor(),
-                          transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))]
-        augmented_transform = [
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomCrop(32, 4)]
-        transform = transforms.Compose(base_transform)
+        train_trans = []
+        test_trans = []
         if data_augmentation:
             print("Augmenting data")
-            transform_train = transforms.Compose(augmented_transform + base_transform)
-        else:
-            transform_train = transform
+            train_trans = [transforms.RandomHorizontalFlip(), 
+                               transforms.RandomCrop(32, 4)]
+
+        base_trans = [transforms.ToTensor(),
+                      transforms.Normalize((0.4914, 0.4822, 0.4465),
+                                           (0.2023, 0.1994, 0.2010))]
+        train_trans += base_trans
+        test_trans += base_trans
+        
         if on_graph:
-            transform_train = transforms.Compose(base_transform + [ToGraph()])
-            transform = transforms.Compose(base_transform + [ToGraph()])
-        X_train = torchvision.datasets.CIFAR10('dataset', train=True, transform=transform_train, download=True)
-        X_test = torchvision.datasets.CIFAR10('dataset', train=False, transform=transform, download=True)
+            train_trans.append(ToGraph())
+            test_trans.append(ToGraph())
+        
+        X_train = torchvision.datasets.CIFAR10('dataset', train=True,
+                    transform=transforms.Compose(train_trans), download=True)
+        X_test = torchvision.datasets.CIFAR10('dataset', train=False,
+                    transform=transforms.Compose(test_trans), download=True)
     
     dataloaders = dict()
     dataloaders['train'] = DataLoader(dataset=X_train, batch_size=batch_size, shuffle=True,
