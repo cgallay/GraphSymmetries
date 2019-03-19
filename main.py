@@ -6,8 +6,9 @@ import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
-from torch.optim.lr_scheduler import MultiStepLR
+from torch.optim.lr_scheduler import MultiStepLR, ExponentialLR
 from tensorboardX import SummaryWriter
+from matplotlib import pyplot as plt
 
 from models.VGG import vgg11
 from models.resnet import ResNet18
@@ -91,7 +92,10 @@ def train(model, dataloader, writer, epoch, nb_epochs):
             print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
                   .format(epoch + 1, nb_epochs, i + 1, len(dataloader), loss.item(),
                           (correct / total) * 100))
-    return losses.mean().item()
+    metrics = {
+        'loss': losses.mean().item()
+    }
+    return metrics
 
 def evaluate(model, dataloader, writer, epoch):
     # TODO add echo to eval
@@ -161,14 +165,22 @@ if __name__ == '__main__':
     if not os.path.isdir(args.checkpoints_dir):
         os.makedirs(args.checkpoints_dir)
 
-    scheduler = MultiStepLR(optimizer, milestones=args.learning_steps, gamma=args.learning_gamma,
+    if args.explore:
+        scheduler = ExponentialLR(optimizer, 2.0)
+    else:
+        scheduler = MultiStepLR(optimizer, milestones=args.learning_steps, gamma=args.learning_gamma,
                             last_epoch=starting_epoch-1)
     # training loop
-    print(f"Training for {args.nb_epochs} epochs")
+    print(f"training for {args.nb_epochs} epochs")
+    losses = []
+    learning_rates = []
     for epoch in range(starting_epoch, args.nb_epochs):
         scheduler.step()
-        writer.add_scalar('learning_rate', scheduler.get_lr()[0], epoch)
-        train(model, dataloaders['train'], writer, epoch, args.nb_epochs)
+        writer.add_scalar('learning_rate/lr', scheduler.get_lr()[0], epoch)
+
+        metrics = train(model, dataloaders['train'], writer, epoch, args.nb_epochs)
+        losses.append(metrics['loss'])
+        learning_rates.append(scheduler.get_lr()[0])
         # TODO save best model according to loss
         torch.save({
             'epoch': epoch,
@@ -176,3 +188,11 @@ if __name__ == '__main__':
             'optimizer_state_dict': optimizer.state_dict()
             }, os.path.join(args.checkpoints_dir, 'model.tar'))
         evaluate(model, dataloaders['test'], writer, epoch)
+        if args.explore:
+            fig=plt.figure()
+            ax = fig.add_subplot(1,1,1)
+            ax.clear()
+            ax.set_ylabel('Losses')
+            ax.set_xlabel('learning rate')
+            ax.plot(learning_rates, losses)
+            writer.add_figure('learing_rate', fig)
