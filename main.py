@@ -69,55 +69,42 @@ def get_model(model_type='Basic', on_graph=False, device='cpu'):
     raise ValueError(f"Unsuported NN architecture")
 
 
-def train(model, dataloader, writer, epoch, nb_epochs):
-    model.train()
-    losses = torch.empty(len(dataloader), requires_grad=False)
+def train_eval(model, dataloaders, optimizer, train=True):
+    if train:
+        model.train()
+    else:
+        model.eval()
+    dataloader = dataloaders['train' if train else 'test']
+    criterion = nn.CrossEntropyLoss()
+    losses = torch.empty(1, requires_grad=False).zero_()
+    accurcies = torch.empty(1, requires_grad=False).zero_()
     for i, (images, labels) in enumerate(dataloader):
-        images = images.to(device)
-        labels = labels.to(device)
-        outputs = model(images)
-        loss = criterion(outputs, labels)
-        losses[i] = loss.item()
-        writer.add_scalars('graph/loss', {'train': loss.item()}, epoch*len(dataloaders['train']) + i)
-        
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        
-        total = labels.size(0)
-        _, predicted = torch.max(outputs.data, 1)
-        correct = (predicted == labels).sum().item()
-        writer.add_scalars('graph/accuracy', {'train': (correct / total) * 100}, epoch*len(dataloaders['train']) + i)
-        if (i + 1) % 100 == 0:
-            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
-                  .format(epoch + 1, nb_epochs, i + 1, len(dataloader), loss.item(),
-                          (correct / total) * 100))
+        with torch.set_grad_enabled(train):
+            images = images.to(device)
+            labels = labels.to(device)
+            nb_item = labels.shape[0]
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            losses += loss
+            if train:
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+            # compute accuracy
+            _, predicted = torch.max(outputs.data, 1)
+            accurcy = float((predicted == labels).sum()) / nb_item
+            accurcies += accurcy
+            print('Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
+                  .format(i + 1, len(dataloader), loss, accurcy * 100.0),
+                  end='\r')
+
     metrics = {
-        'loss': losses.mean().item()
+        'loss': losses / len(dataloader),
+        'accuracy': accurcies / len(dataloader)
     }
     return metrics
 
-def evaluate(model, dataloader, writer, epoch):
-    # TODO add echo to eval
-    model.eval()
-    correct_sum = 0
-    total_sum = 0
-    test_loss = []
-    with torch.no_grad():
-        for i, (images, labels) in enumerate(dataloader):
-            images = images.to(device)
-            labels = labels.to(device)
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            test_loss.append(loss.item())
-            total = labels.size(0)
-            _, predicted = torch.max(outputs.data, 1)
-            correct = (predicted == labels).sum().item()
-            correct_sum += correct
-            total_sum += total
-
-    writer.add_scalars('graph/loss', {'test': sum(test_loss)/ len(test_loss)}, (epoch+1)*len(dataloaders['train']))
-    writer.add_scalars('graph/accuracy', {'test': (correct_sum / total_sum) * 100}, (epoch+1)*len(dataloaders['train']))
 
 if __name__ == '__main__':
     global args
@@ -145,7 +132,6 @@ if __name__ == '__main__':
     except:
         print("Graph could not be loged in tensordboard.")
 
-    criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9,
                                 weight_decay=args.weight_decay)
 
@@ -177,22 +163,25 @@ if __name__ == '__main__':
     for epoch in range(starting_epoch, args.nb_epochs):
         scheduler.step()
         writer.add_scalar('learning_rate/lr', scheduler.get_lr()[0], epoch)
-
-        metrics = train(model, dataloaders['train'], writer, epoch, args.nb_epochs)
-        losses.append(metrics['loss'])
-        learning_rates.append(scheduler.get_lr()[0])
+        for step in ['train', 'test']:
+            metrics = train_eval(model, dataloaders, optimizer, step == 'train')
+            if step == 'test':
+                losses.append(metrics['loss'])
+        # metrics = train(model, dataloaders['train'], writer, epoch, args.nb_epochs)
+        
+        # learning_rates.append(scheduler.get_lr()[0])
         # TODO save best model according to loss
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict()
             }, os.path.join(args.checkpoints_dir, 'model.tar'))
-        evaluate(model, dataloaders['test'], writer, epoch)
-        if args.explore:
-            fig=plt.figure()
-            ax = fig.add_subplot(1,1,1)
-            ax.clear()
-            ax.set_ylabel('Losses')
-            ax.set_xlabel('learning rate')
-            ax.plot(learning_rates, losses)
-            writer.add_figure('learing_rate', fig)
+        # evaluate(model, dataloaders['test'], writer, epoch)
+        # if args.explore:
+        #    fig=plt.figure()
+        #    ax = fig.add_subplot(1,1,1)
+        #    ax.clear()
+        #    ax.set_ylabel('Losses')
+        #    ax.set_xlabel('learning rate')
+        #    ax.plot(learning_rates, losses)
+        #    writer.add_figure('learing_rate', fig)

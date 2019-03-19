@@ -28,4 +28,7 @@ def get_args():
                         help='Learning rate mutiplicator per milestone.')
     parser.add_argument('--on_graph', dest='on_graph', action='store_true',
                         help='Use a grid graph to represent the image and perform convolutions on it.')
+    parser.add_argument('--explore', dest='explore', action='store_true',
+                        help='Exploration of the learning rate mode.')
+    
     return parser.parse_args()
