@@ -13,11 +13,13 @@ from models.VGG import vgg11
 from models.resnet import ResNet18
 from models.classics import ConvNet
 from utils.transforms import ToGraph
+from utils.helpers import get_number_of_parma
+from utils.argparser import get_args
 
 # TODO add it to an argparser
 batch_size = 128
 device = torch.device('cpu')
-supported_models = ['ConvNet', 'VGG', 'ResNet18']
+
 
 def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
     suported_datasets = ['CIFAR10']
@@ -55,8 +57,6 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
     return dataloaders
 
 def get_model(model_type='Basic', on_graph=False, device='cpu'):
-    if model_type not in supported_models:
-        raise ValueError(f"Unsuported NN architecture")
     
     if model_type == 'ConvNet':
         return ConvNet(on_graph=on_graph, device=device)
@@ -64,6 +64,8 @@ def get_model(model_type='Basic', on_graph=False, device='cpu'):
         return vgg11()
     if model_type == 'ResNet18':
         return ResNet18()
+
+    raise ValueError(f"Unsuported NN architecture")
 
 
 def train(model, dataloader, writer, epoch, nb_epochs):
@@ -113,37 +115,10 @@ def evaluate(model, dataloader, writer, epoch):
     writer.add_scalars('graph/loss', {'test': sum(test_loss)/ len(test_loss)}, (epoch+1)*len(dataloaders['train']))
     writer.add_scalars('graph/accuracy', {'test': (correct_sum / total_sum) * 100}, (epoch+1)*len(dataloaders['train']))
 
-
-def get_args():
-    parser = argparse.ArgumentParser(
-        description='Train CNN.')
-    
-    parser.add_argument('--arch', type=str, choices=supported_models, required=True,
-                        help='model name parameter')
-    parser.add_argument('--nb_epochs', type=int, default=5,
-                        help='Number of epoch for the training.')
-    parser.add_argument('--log_dir', type=str, default='Graph',
-                        help='Path to the log directory.')
-    parser.add_argument('--checkpoints_dir', type=str, default='checkpoints',
-                        help='Path to the checkpoint directory.')
-    parser.add_argument('--lr', type=float, default=0.05,
-                        help='Learning rate for the optimizer.')
-    parser.add_argument('--weight_decay', '--wd', default=5e-4, type=float,
-                        help='weight decay (default: 5e-4)')
-    parser.add_argument('--data_augmentation', '--da', dest='data_augmentation', action='store_true',
-                        help='To set in order to apply data augmentation to the training set.')
-    parser.add_argument('--restore', dest='restore_from_checkpoint', action='store_true',
-                        help='Restore from last checkpoint.')
-    parser.add_argument('--learning_steps', '--ls', nargs='+', default=[], type=int,
-                        help='Milestone when to decay learning rate by learing_gamma.')
-    parser.add_argument('--learning_gamma', '--lg', type=float, default=0.1,
-                        help='Learning rate mutiplicator per milestone.')
-    parser.add_argument('--on_graph', dest='on_graph', action='store_true',
-                        help='Use a grid graph to represent the image and perform convolutions on it.')
-    return parser.parse_args()
-
 if __name__ == '__main__':
+    global args
     args = get_args()
+
     # load the model
     starting_epoch = 0
     writer = SummaryWriter(log_dir=args.log_dir)
@@ -158,7 +133,9 @@ if __name__ == '__main__':
     else:
         print("Model runing on CPU")
         model = get_model(args.arch, args.on_graph, device=device)
-    
+
+    print(f"The model has {get_number_of_parma(model)} parameters to learn.")
+
     try:
         writer.add_graph(model, next(iter(dataloaders['train']))[0], False)
     except:
@@ -167,7 +144,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9,
                                 weight_decay=args.weight_decay)
-    
+
     if args.restore_from_checkpoint:
         path = os.path.join(args.checkpoints_dir, 'model.tar')
         try:
@@ -187,7 +164,7 @@ if __name__ == '__main__':
     scheduler = MultiStepLR(optimizer, milestones=args.learning_steps, gamma=args.learning_gamma,
                             last_epoch=starting_epoch-1)
     # training loop
-    print(f"training for {args.nb_epochs} epochs")
+    print(f"Training for {args.nb_epochs} epochs")
     for epoch in range(starting_epoch, args.nb_epochs):
         scheduler.step()
         writer.add_scalar('learning_rate', scheduler.get_lr()[0], epoch)
