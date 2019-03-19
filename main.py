@@ -95,9 +95,10 @@ def train_eval(model, dataloaders, optimizer, train=True):
             _, predicted = torch.max(outputs.data, 1)
             accurcy = float((predicted == labels).sum()) / nb_item
             accurcies += accurcy
-            print('Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
-                  .format(i + 1, len(dataloader), loss, accurcy * 100.0),
-                  end='\r')
+            if i % 10 == 0:
+                print('Step [{}/{}],\tLoss: {:.4f},\tAccuracy: {:.2f}%\t'
+                    .format(i + 1, len(dataloader), loss, accurcy * 100.0),
+                    end='\r')
 
     metrics = {
         'loss': losses / len(dataloader),
@@ -142,7 +143,6 @@ if __name__ == '__main__':
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             starting_epoch = checkpoint['epoch']
-            # TODO restore learning_steps
             print(f"Model restored from epoch {starting_epoch}")
         except FileNotFoundError:
             print(f"Can't restore from checkpoint as checkpoint {path} doesn't exist")
@@ -167,7 +167,7 @@ if __name__ == '__main__':
             metrics = train_eval(model, dataloaders, optimizer, step == 'train')
             if step == 'test':
                 losses.append(metrics['loss'])
-            print('{} Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
+            print('{}\tEpoch [{}/{}],\tLoss: {:.4f},\tAccuracy: {:.2f}%\t'
                   .format(step, epoch, args.nb_epochs, metrics['loss'], metrics['accuracy'] * 100))
        
         # learning_rates.append(scheduler.get_lr()[0])
