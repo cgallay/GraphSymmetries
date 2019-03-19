@@ -1,7 +1,7 @@
 # Results
 
 ## ConvNet on_graph - 17.03.2019
-commit: 164921931c932a8a3b77bc6f475be7e94bdb4729
+commit: [1649219](https://github.com/cgallay/Semester_Project/commit/164921931c932a8a3b77bc6f475be7e94bdb4729)
 
 cmd: `python3.6 main.py --arch ConvNet --lr=0.02 --da --nb_epochs=300 --on_graph --ls 50 100 150 200 250 300`
 
@@ -13,7 +13,7 @@ Accuracy:
 - Train: 77% & 93%
 
 ## ResNet - 06.03.2019
-commit: 243c8abe6d64a02e97a1c58be205843241444cb6
+commit: [243c8ab](https://github.com/cgallay/Semester_Project/commit/243c8abe6d64a02e97a1c58be205843241444cb6)
 
 cmd: `./run_best.sh ResNet18`
 
