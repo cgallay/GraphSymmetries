@@ -57,7 +57,7 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
                                      num_workers=4)
     return dataloaders
 
-def get_model(model_type='Basic', on_graph=False, device='cpu'):
+def get_model(model_type='ConvNet', on_graph=False, device='cpu'):
     
     if model_type == 'ConvNet':
         return ConvNet(on_graph=on_graph, device=device)
@@ -92,7 +92,7 @@ def train_eval(model, dataloaders, optimizer, train=True):
 
             # compute accuracy
             _, predicted = torch.max(outputs.data, 1)
-            accurcy = float((predicted == labels).sum()) / nb_item
+            accurcy = float((predicted == labels).sum().item()) / nb_item
             accurcies += accurcy
             if i % 10 == 0:
                 print("                                                                  ", end='\r')
