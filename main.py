@@ -98,7 +98,7 @@ def train_eval(model, dataloaders, optimizer, train=True):
             if i % 10 == 0:
                 print('Step [{}/{}],\tLoss: {:.4f},\tAccuracy: {:.2f}%\t'
                     .format(i + 1, len(dataloader), loss, accurcy * 100.0),
-                    end='\r')
+                    end='\r', flush=True)
 
     metrics = {
         'loss': losses / len(dataloader),
@@ -168,7 +168,8 @@ if __name__ == '__main__':
             if step == 'test':
                 losses.append(metrics['loss'])
             print('{}\tEpoch [{}/{}],\tLoss: {:.4f},\tAccuracy: {:.2f}%\t'
-                  .format(step, epoch, args.nb_epochs, metrics['loss'], metrics['accuracy'] * 100))
+                  .format(step, epoch, args.nb_epochs, metrics['loss'], metrics['accuracy'] * 100),
+                  flush=True)
        
         # learning_rates.append(scheduler.get_lr()[0])
         # TODO save best model according to loss
