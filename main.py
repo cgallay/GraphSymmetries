@@ -76,8 +76,8 @@ def train_eval(model, dataloaders, optimizer, train=True):
         model.eval()
     dataloader = dataloaders['train' if train else 'test']
     criterion = nn.CrossEntropyLoss()
-    losses = torch.empty(1, requires_grad=False).zero_()
-    accurcies = torch.empty(1, requires_grad=False).zero_()
+    losses = 0
+    accurcies = 0
     for i, (images, labels) in enumerate(dataloader):
         with torch.set_grad_enabled(train):
             images = images.to(device)
@@ -85,7 +85,7 @@ def train_eval(model, dataloaders, optimizer, train=True):
             nb_item = labels.shape[0]
             outputs = model(images)
             loss = criterion(outputs, labels)
-            losses += loss
+            losses += loss.item()
             if train:
                 optimizer.zero_grad()
                 loss.backward()
@@ -168,7 +168,7 @@ if __name__ == '__main__':
             if step == 'test':
                 losses.append(metrics['loss'])
             print('{} Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
-                  .format(step, epoch, args.nb_epochs, metrics['loss'], metrics['accuracy']))
+                  .format(step, epoch, args.nb_epochs, metrics['loss'], metrics['accuracy'] * 100))
        
         # learning_rates.append(scheduler.get_lr()[0])
         # TODO save best model according to loss
