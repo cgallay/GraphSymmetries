@@ -167,8 +167,9 @@ if __name__ == '__main__':
             metrics = train_eval(model, dataloaders, optimizer, step == 'train')
             if step == 'test':
                 losses.append(metrics['loss'])
-        # metrics = train(model, dataloaders['train'], writer, epoch, args.nb_epochs)
-        
+            print('{} Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
+                  .format(step, epoch, args.nb_epochs, metrics['loss'], metrics['accuracy']))
+       
         # learning_rates.append(scheduler.get_lr()[0])
         # TODO save best model according to loss
         torch.save({
