@@ -168,6 +168,7 @@ if __name__ == '__main__':
             metrics = train_eval(model, dataloaders, optimizer, step == 'train')
             if step == 'test':
                 losses.append(metrics['loss'])
+            print("                                                                  ", end='\r')
             print('{}\tEpoch [{}/{}],\tLoss: {:.4f},\tAccuracy: {:.2f}%\t'
                   .format(step, epoch, args.nb_epochs, metrics['loss'], metrics['accuracy'] * 100),
                   flush=True)
