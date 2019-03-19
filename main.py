@@ -20,7 +20,7 @@ from utils.argparser import get_args
 # TODO add it to an argparser
 batch_size = 128
 device = torch.device('cpu')
-
+criterion = nn.CrossEntropyLoss()
 
 def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
     suported_datasets = ['CIFAR10']
@@ -75,7 +75,6 @@ def train_eval(model, dataloaders, optimizer, train=True):
     else:
         model.eval()
     dataloader = dataloaders['train' if train else 'test']
-    criterion = nn.CrossEntropyLoss()
     losses = 0
     accurcies = 0
     for i, (images, labels) in enumerate(dataloader):
