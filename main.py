@@ -96,6 +96,7 @@ def train_eval(model, dataloaders, optimizer, train=True):
             accurcy = float((predicted == labels).sum()) / nb_item
             accurcies += accurcy
             if i % 10 == 0:
+                print("                                                                  \r")
                 print('Step [{}/{}],\tLoss: {:.4f},\tAccuracy: {:.2f}%\t'
                     .format(i + 1, len(dataloader), loss, accurcy * 100.0),
                     end='\r', flush=True)
