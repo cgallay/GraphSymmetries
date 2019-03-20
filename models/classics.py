@@ -115,12 +115,37 @@ class ConvNet(nn.Module):
         self.layer3 = nn.Sequential(
             nn.Dropout(0.5),
             get_conv(192, 192, input_shape=input_shape, kernel_size=3,
+                     padding=1, on_graph=on_graph, device=device),  # out 16x16
+            nn.ReLU(),
+            get_conv(192, 192, input_shape=input_shape, kernel_size=3,
+                     padding=1, on_graph=on_graph, device=device),  # out 16x16
+            nn.ReLU(),
+            get_pool(kernel_size=3, stride=2, padding=1, on_graph=on_graph,
+                     input_shape=input_shape)  # out 8x8
+        )
+        input_shape = (input_shape[0] // 2, input_shape[1] // 2)
+        self.layer4 = nn.Sequential(
+            nn.Dropout(0.5),
+            get_conv(192, 192, input_shape=input_shape, kernel_size=3,
+                     padding=1, on_graph=on_graph, device=device),  # out 16x16
+            nn.ReLU(),
+            get_conv(192, 192, input_shape=input_shape, kernel_size=3,
+                     padding=1, on_graph=on_graph, device=device),  # out 16x16
+            nn.ReLU(),
+            get_pool(kernel_size=3, stride=2, padding=1, on_graph=on_graph,
+                     input_shape=input_shape)  # out 8x8
+        )
+        input_shape = (input_shape[0] // 2, input_shape[1] // 2)
+        self.layer5 = nn.Sequential(
+            nn.Dropout(0.5),
+            get_conv(192, 192, input_shape=input_shape, kernel_size=3,
                      padding=1, on_graph=on_graph, device=device),  # out 8x8
             nn.ReLU(),
             get_conv(192, 10, input_shape=input_shape, device=device, kernel_size=1,
                      on_graph=on_graph),  # out 8x8
             nn.ReLU()
         )
+        
         self.drop_out = nn.Dropout()
         self.fc1 = nn.Linear(10 * input_shape[0] * input_shape[1], 1000)
         self.fc2 = nn.Linear(1000, 10)
@@ -129,6 +154,8 @@ class ConvNet(nn.Module):
         out = self.layer1(x)
         out = self.layer2(out)
         out = self.layer3(out)
+        out = self.layer4(out)
+        out = self.layer5(out)
         out = out.reshape(out.size(0), -1)
         out = self.fc1(out)
         out = self.drop_out(out)
