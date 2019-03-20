@@ -95,7 +95,8 @@ def train_eval(model, dataloaders, optimizer, train=True):
             _, predicted = torch.max(outputs.data, 1)
             accurcy = float((predicted == labels).sum().item()) / nb_item
             accurcies += accurcy
-            logger.write({'loss': loss.item(), 'accuracy': accurcy})
+            if train:
+                logger.write({'loss': loss.item(), 'accuracy': accurcy})
             if i % 10 == 0:
                 print("                                                                  ", end='\r')
                 print('Step [{}/{}],\tLoss: {:.4f},\tAccuracy: {:.2f}%\t'
