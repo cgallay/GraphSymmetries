@@ -7,7 +7,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import MultiStepLR, ExponentialLR
-from tensorboardX import SummaryWriter
+
 from matplotlib import pyplot as plt
 
 from models.VGG import vgg11
@@ -16,6 +16,7 @@ from models.classics import ConvNet
 from utils.transforms import ToGraph
 from utils.helpers import get_number_of_parma
 from utils.argparser import get_args
+from utils.logger import Logger
 
 # TODO add it to an argparser
 batch_size = 128
@@ -89,11 +90,12 @@ def train_eval(model, dataloaders, optimizer, train=True):
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-
+            
             # compute accuracy
             _, predicted = torch.max(outputs.data, 1)
             accurcy = float((predicted == labels).sum().item()) / nb_item
             accurcies += accurcy
+            logger.write({'loss': loss.item(), 'accuracy': accurcy})
             if i % 10 == 0:
                 print("                                                                  ", end='\r')
                 print('Step [{}/{}],\tLoss: {:.4f},\tAccuracy: {:.2f}%\t'
@@ -109,11 +111,12 @@ def train_eval(model, dataloaders, optimizer, train=True):
 
 if __name__ == '__main__':
     global args
+    global logger
     args = get_args()
-
+    logger = Logger('Graph')
     # load the model
     starting_epoch = 0
-    writer = SummaryWriter(log_dir=args.log_dir)
+    
     dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation,
                                   on_graph=args.on_graph)
     model = None
@@ -128,10 +131,7 @@ if __name__ == '__main__':
 
     print(f"The model has {get_number_of_parma(model)} parameters to learn.")
 
-    try:
-        writer.add_graph(model, next(iter(dataloaders['train']))[0], False)
-    except:
-        print("Graph could not be loged in tensordboard.")
+    logger.write_graph(model, next(iter(dataloaders['train']))[0])
 
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9,
                                 weight_decay=args.weight_decay)
@@ -162,11 +162,11 @@ if __name__ == '__main__':
     learning_rates = []
     for epoch in range(starting_epoch, args.nb_epochs):
         scheduler.step()
-        writer.add_scalar('learning_rate/lr', scheduler.get_lr()[0], epoch)
+
+        # writer.add_scalar('learning_rate/lr', scheduler.get_lr()[0], epoch)
         for step in ['train', 'test']:
             metrics = train_eval(model, dataloaders, optimizer, step == 'train')
-            if step == 'test':
-                losses.append(metrics['loss'])
+            logger.write(metrics, curve=f"mean_{step}", increment=False)
             print("                                                                  ", end='\r')
             print('{}\tEpoch [{}/{}],\tLoss: {:.4f},\tAccuracy: {:.2f}%\t'
                   .format(step, epoch, args.nb_epochs, metrics['loss'], metrics['accuracy'] * 100),
@@ -179,7 +179,6 @@ if __name__ == '__main__':
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict()
             }, os.path.join(args.checkpoints_dir, 'model.tar'))
-        # evaluate(model, dataloaders['test'], writer, epoch)
         # if args.explore:
         #    fig=plt.figure()
         #    ax = fig.add_subplot(1,1,1)
