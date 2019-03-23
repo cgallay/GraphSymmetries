@@ -1,5 +1,17 @@
 # Results
 
+
+## ConvNet - 20.03.2019
+commit: [27780a2](https://github.com/cgallay/Semester_Project/tree/27780a226bb2f86129502d5bec1981e37cd34f4c)
+
+cmd: `./run_best.sh ConvNet`
+
+Accuracy: >88% at best
+
+Speed: 1.55 minutes
+
+
+
 ## ConvNet on_graph - 17.03.2019
 commit: [1649219](https://github.com/cgallay/Semester_Project/tree/164921931c932a8a3b77bc6f475be7e94bdb4729)
 
