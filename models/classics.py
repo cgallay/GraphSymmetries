@@ -52,7 +52,7 @@ def prepare_laplacian(laplacian):
 def get_conv(features_in, features_out, input_shape=(32,32), kernel_size=3,
              padding=0, on_graph=False, device='cpu'):
     if on_graph:
-        # kernel_size = (kernel_size // 2) + 1
+        kernel_size = (kernel_size // 2) + 1
         laplacian = create_laplacian(*input_shape, device=device)
         return FixGraphConv(features_in, features_out, laplacian=laplacian,
                             kernel_size=kernel_size)
