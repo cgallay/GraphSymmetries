@@ -8,8 +8,6 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import MultiStepLR, ExponentialLR
 
-from matplotlib import pyplot as plt
-
 from models.VGG import vgg11
 from models.resnet import ResNet18
 from models.classics import ConvNet
@@ -163,8 +161,8 @@ if __name__ == '__main__':
     learning_rates = []
     for epoch in range(starting_epoch, args.nb_epochs):
         scheduler.step()
+        logger.write({'learning rate': scheduler.get_lr()[0]}, index=epoch)
 
-        # writer.add_scalar('learning_rate/lr', scheduler.get_lr()[0], epoch)
         for step in ['train', 'test']:
             metrics = train_eval(model, dataloaders, optimizer, step == 'train')
             logger.write(metrics, curve=f"mean_{step}", increment=False)
@@ -172,19 +170,13 @@ if __name__ == '__main__':
             print('{}\tEpoch [{}/{}],\tLoss: {:.4f},\tAccuracy: {:.2f}%\t'
                   .format(step, epoch, args.nb_epochs, metrics['loss'], metrics['accuracy'] * 100),
                   flush=True)
-       
-        # learning_rates.append(scheduler.get_lr()[0])
+
+        learning_rates.append(scheduler.get_lr()[0])
         # TODO save best model according to loss
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict()
             }, os.path.join(args.checkpoints_dir, 'model.tar'))
-        # if args.explore:
-        #    fig=plt.figure()
-        #    ax = fig.add_subplot(1,1,1)
-        #    ax.clear()
-        #    ax.set_ylabel('Losses')
-        #    ax.set_xlabel('learning rate')
-        #    ax.plot(learning_rates, losses)
-        #    writer.add_figure('learing_rate', fig)
+        if args.explore:
+            logger.plot_eploration(learning_rates, losses)
