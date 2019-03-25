@@ -9,6 +9,8 @@ Accuracy: >73%
 
 Speed: 4.125 minutes / epoch
 
+nb_param: 1'551'116
+
 ## ConvNet - 20.03.2019
 commit: [27780a2](https://github.com/cgallay/Semester_Project/tree/27780a226bb2f86129502d5bec1981e37cd34f4c)
 
@@ -17,6 +19,8 @@ cmd: `./run_best.sh ConvNet`
 Accuracy: >88% at best
 
 Speed: 1.55 minutes / epoch
+
+nb_param: 2'296'556
 
 
 ## ConvNet on_graph - 17.03.2019
