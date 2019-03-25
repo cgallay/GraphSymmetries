@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -49,13 +51,47 @@ def prepare_laplacian(laplacian):
     return laplacian
 
 
-def get_conv(features_in, features_out, input_shape=(32,32), kernel_size=3,
-             padding=0, on_graph=False, device='cpu'):
+def get_conv(features_in:int, features_out:int, input_shape:Tuple[int, int]=(32, 32),
+             kernel_size:int=3, padding=0, on_graph:bool=False, device:str='cpu'):
+    """
+    Define a convolution either on Graph or a normal 2DConv depending on parameter on_graph.
+
+    When then convolution is defined on graph, a laplacian for a grid graph is created and used
+    to perform the convolution.
+    In case of padding we construct a noramal graph but from the output graph, we remove the verticies
+    that are on the side. (If a verticies has less than 4 neibough or the max number of neigbour it is removed
+    from the graph.)  
+
+    Param:
+    features_in:
+        number of channel in input of the convolution
+    features_out:
+        Number of channel in output of the convolution
+    input_shape:
+        Shape of the input image (usually a square tuple)
+    kernel_size:
+        Size of the square kernel for 2DConv or number of chebyshev polynom 
+        to use for aproximation. It can be seen as the further filter can see
+        in term of hope.
+    padding:
+        On graph it is the number of border node to remove.
+        On 2D Conv it is the number of zero to add on each side.
+    on_graph:
+        When set to True, perform a convolution on a grid graph
+    device:
+        For pytorch to know where to store the Laplacian matrix
+    """
+
     if on_graph:
         kernel_size = (kernel_size // 2) + 1
         laplacian = create_laplacian(*input_shape, device=device)
-        return FixGraphConv(features_in, features_out, laplacian=laplacian,
+        out = FixGraphConv(features_in, features_out, laplacian=laplacian,
                             kernel_size=kernel_size)
+        if padding == 0:
+            return out
+        out = out.view(-1, input_shape)
+        out = out[:, padding:-padding, padding:-padding]
+        return out.view(-1, (input_shape[0] - padding) * (input_shape[1] - padding))
     else:
         return nn.Conv2d(features_in, features_out, kernel_size=kernel_size, padding=padding)
 
