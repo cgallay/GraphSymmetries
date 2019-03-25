@@ -1,5 +1,13 @@
 # Results
 
+## ConvNet on Graph:
+commit: [8cdccc2](https://github.com/cgallay/Semester_Project/tree/8cdccc2ebc6fd6ca73a27efef03bf78c156bceff)
+
+cmd: `python3.6 main.py --arch ConvNet --lr=0.01 --wd=5e-4 --da --nb_epochs=160 --ls 75 125 150 --on_graph`
+
+Accuracy: >73%
+
+Speed: 4.125 minutes / epoch
 
 ## ConvNet - 20.03.2019
 commit: [27780a2](https://github.com/cgallay/Semester_Project/tree/27780a226bb2f86129502d5bec1981e37cd34f4c)
@@ -8,8 +16,7 @@ cmd: `./run_best.sh ConvNet`
 
 Accuracy: >88% at best
 
-Speed: 1.55 minutes
-
+Speed: 1.55 minutes / epoch
 
 
 ## ConvNet on_graph - 17.03.2019
