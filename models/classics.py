@@ -1,58 +1,17 @@
 from typing import Tuple
 
-import numpy as np
 import torch
 import torch.nn as nn
-import pygsp as pg
 from scipy import sparse
 
 from models.layers.graph_conv import FixGraphConv
-
-
-# TODO move
-def create_laplacian(size_x, size_y, device='cpu'):
-    graph = pg.graphs.Grid2d(size_x, size_y)
-    laplacian = graph.L.astype(np.float32)
-    laplacian = prepare_laplacian(laplacian)
-    return laplacian.to(device)
-
-# TODO move
-def prepare_laplacian(laplacian):
-    r"""Prepare a graph Laplacian to be fed to a graph convolutional layer."""
-
-    def estimate_lmax(laplacian, tol=5e-3):
-        r"""Estimate the largest eigenvalue of an operator."""
-        lmax = sparse.linalg.eigsh(laplacian, k=1, tol=tol,
-                                   ncv=min(laplacian.shape[0], 10),
-                                   return_eigenvectors=False)
-        lmax = lmax[0]
-        lmax *= 1 + 2*tol  # Be robust to errors.
-        return lmax
-
-    def scale_operator(L, lmax):
-        r"""Scale an operator's eigenvalues from [0, lmax] to [-1, 1]."""
-        I = sparse.identity(L.shape[0], format=L.format, dtype=L.dtype)
-        L *= 2 / lmax
-        L -= I
-        return L
-
-    lmax = estimate_lmax(laplacian)
-    laplacian = scale_operator(laplacian, lmax)
-
-    laplacian = sparse.coo_matrix(laplacian)
-
-    # PyTorch wants a LongTensor (int64) as indices (it'll otherwise convert).
-    indices = np.empty((2, laplacian.nnz), dtype=np.int64)
-    np.stack((laplacian.row, laplacian.col), axis=0, out=indices)
-    indices = torch.from_numpy(indices)
-
-    laplacian = torch.sparse_coo_tensor(indices, laplacian.data, laplacian.shape)
-    laplacian = laplacian.coalesce()  # More efficient subsequent operations.
-    return laplacian
-
+from utils.argparser import get_args
+from utils.helpers import t_add, conv_output_shape
+args = get_args()
 
 def get_conv(features_in:int, features_out:int, input_shape:Tuple[int, int]=(32, 32),
-             kernel_size:int=3, padding=0, on_graph:bool=False, device:str='cpu'):
+             kernel_size:int=3, padding=0, on_graph:bool=False, crop_size:int=0,
+             device:str='cpu'):
     """
     Define a convolution either on Graph or a normal 2DConv depending on parameter on_graph.
 
@@ -74,27 +33,29 @@ def get_conv(features_in:int, features_out:int, input_shape:Tuple[int, int]=(32,
         to use for aproximation. It can be seen as the further filter can see
         in term of hope.
     padding:
-        On graph it is the number of border node to remove.
-        On 2D Conv it is the number of zero to add on each side.
+        The number of zero to add on each side.
     on_graph:
         When set to True, perform a convolution on a grid graph
+    remove_boundary_effect:
+        When True the K (kernel_size) nodes on the border of the graph are removed in order to
+        compensate for the reflection effect on the boundary.
     device:
         For pytorch to know where to store the Laplacian matrix
     """
 
     if on_graph:
-        kernel_size = (kernel_size // 2) + 1
-        laplacian = create_laplacian(*input_shape, device=device)
-        out = FixGraphConv(features_in, features_out, laplacian=laplacian,
-                            kernel_size=kernel_size)
-        if padding == 0:
-            return out
-        out = out.view(-1, input_shape)
-        out = out[:, padding:-padding, padding:-padding]
-        return out.view(-1, (input_shape[0] - padding) * (input_shape[1] - padding))
+        conv = FixGraphConv(features_in, features_out, input_shape=input_shape,
+                           kernel_size=kernel_size, padding=padding, device=device,
+                           crop_size=crop_size)
+        out_shape = t_add(input_shape, padding - crop_size)
+        return conv, out_shape
     else:
-        return nn.Conv2d(features_in, features_out, kernel_size=kernel_size, padding=padding)
+        conv = nn.Conv2d(features_in, features_out, kernel_size=kernel_size, padding=padding)
+        out_shape = conv_output_shape(input_shape, kernel_size=kernel_size, pad=padding)
+        return conv, out_shape
 
+def crop(img, s):
+    return img[:, s:-s, s:-s]
 
 class GraphMaxPool2d(nn.Module):
     def __init__(self, kernel_size=3, stride=2, padding=1, input_shape=(32, 32)):
@@ -105,86 +66,135 @@ class GraphMaxPool2d(nn.Module):
     
     def forward(self, x):
         # TODO reshaping (view)
-        x = x.permute(0,2,1)
         shape = x.shape
         x = x.view(shape[0], shape[1], self.input_shape[0], self.input_shape[1])
         x = self.pooling(x)
         x = x.view(shape[0], shape[1], shape[2] // self.stride // self.stride)
-        x = x.permute(0,2,1)
         return x
 
 
 def get_pool(kernel_size=3, stride=2, padding=1, input_shape=(32, 32), on_graph=False):
+    out_shape = conv_output_shape(input_shape, kernel_size, stride, pad=padding)
     if on_graph:
-        return GraphMaxPool2d(kernel_size=kernel_size, stride=stride, padding=padding,
-                              input_shape=input_shape)
+        pool =  GraphMaxPool2d(kernel_size=kernel_size, stride=stride, padding=padding,
+                               input_shape=input_shape)
     else:
-        return nn.MaxPool2d(kernel_size=kernel_size, stride=stride, padding=padding)
+        pool = nn.MaxPool2d(kernel_size=kernel_size, stride=stride, padding=padding)
+    return pool, out_shape
 
+kernel_size_setting = {
+    1: {}
+}
+
+def get_param(on_graph, conv_setting):
+    return 
+
+conv_settings = {
+    0: {
+        'on_graph': {
+            'kernel_size':3,
+            'padding': 0,
+            'remove_boundary_effect': False
+        },
+        '2dconv': {
+            'kernel_size':3,
+            'padding': 0
+        }
+    },
+    1: {
+        'on_graph': {
+
+        },
+        '2dconv': {
+
+        }
+    }
+}
 
 class ConvNet(nn.Module):
-    def __init__(self, input_shape=(32,32), on_graph=False, device='cpu'):
+    def __init__(self, input_shape=(32,32), on_graph=False, device='cpu',
+                 nb_class:int=10):
         super(ConvNet, self).__init__()
+        self.nb_class = nb_class
+        conv1, shape1 = get_conv(3, 96, input_shape=input_shape, kernel_size=3,
+                                 padding=1, on_graph=on_graph, device=device,
+                                 crop_size=1)  # out 32x32
+        conv2, shape2 = get_conv(96, 96, input_shape=shape1, kernel_size=3,
+                                 padding=1, on_graph=on_graph, device=device,
+                                 crop_size=1)  # out 32x32
+        pool1, pshape1 = get_pool(kernel_size=3, stride=2, padding=1, on_graph=on_graph,
+                                  input_shape=shape2)  # out 16x16
         self.layer1 = nn.Sequential(
             nn.Dropout(0.2),
-            get_conv(3, 96, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph, device=device),  # out 32x32
+            conv1,
             nn.ReLU(),
-            get_conv(96, 96, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph, device=device),  # out 32x32
+            conv2,
             nn.ReLU(),
-            get_pool(kernel_size=3, stride=2, padding=1, on_graph=on_graph)  # out 16x16 
+            pool1
         )
-        input_shape = (input_shape[0] // 2, input_shape[1] // 2)
+        conv3, shape3 = get_conv(96, 192, input_shape=pshape1, kernel_size=3,
+                     padding=1, on_graph=on_graph, device=device,
+                     crop_size=1)
+        conv4, shape4 = get_conv(192, 192, input_shape=shape3, kernel_size=3,
+                     padding=1, on_graph=on_graph, device=device,
+                     crop_size=1)
+        pool2, pshape2 = get_pool(kernel_size=3, stride=2, padding=1, on_graph=on_graph,
+                                  input_shape=shape4)
         self.layer2 = nn.Sequential(
             nn.Dropout(0.5),
-            get_conv(96, 192, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph, device=device),  # out 16x16
+            conv3,
             nn.ReLU(),
-            get_conv(192, 192, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph, device=device),  # out 16x16
+            conv4,
             nn.ReLU(),
-            get_pool(kernel_size=3, stride=2, padding=1, on_graph=on_graph,
-                     input_shape=input_shape)  # out 8x8
+            pool2
         )
-        input_shape = (input_shape[0] // 2, input_shape[1] // 2)
+        conv5, shape5 = get_conv(192, 192, input_shape=pshape2, kernel_size=3,
+                     padding=1, on_graph=on_graph, device=device,
+                     crop_size=1)
+        conv6, shape6 = get_conv(192, 192, input_shape=shape5, kernel_size=3,
+                     padding=1, on_graph=on_graph, device=device, crop_size=1)
+        pool3, pshape3 = get_pool(kernel_size=3, stride=2, padding=1, on_graph=on_graph,
+                                  input_shape=shape6)  # out 8x8
         self.layer3 = nn.Sequential(
             nn.Dropout(0.5),
-            get_conv(192, 192, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph, device=device),  # out 16x16
+            conv5,
             nn.ReLU(),
-            get_conv(192, 192, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph, device=device),  # out 16x16
+            conv6,
             nn.ReLU(),
-            get_pool(kernel_size=3, stride=2, padding=1, on_graph=on_graph,
-                     input_shape=input_shape)  # out 8x8
+            pool3
         )
-        input_shape = (input_shape[0] // 2, input_shape[1] // 2)
+        conv7, shape7 = get_conv(192, 192, input_shape=pshape3, kernel_size=3,
+                     padding=1, on_graph=on_graph, device=device,
+                     crop_size=1)
+        conv8, shape8 = get_conv(192, 192, input_shape=shape7, kernel_size=3,
+                     padding=1, on_graph=on_graph, device=device,
+                     crop_size=1)
+        pool4, pshape4 =  get_pool(kernel_size=3, stride=2, padding=1, on_graph=on_graph,
+                                   input_shape=shape8)  # out 8x8
         self.layer4 = nn.Sequential(
             nn.Dropout(0.5),
-            get_conv(192, 192, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph, device=device),  # out 16x16
+            conv7,
             nn.ReLU(),
-            get_conv(192, 192, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph, device=device),  # out 16x16
+            conv8,
             nn.ReLU(),
-            get_pool(kernel_size=3, stride=2, padding=1, on_graph=on_graph,
-                     input_shape=input_shape)  # out 8x8
+            pool4
         )
-        input_shape = (input_shape[0] // 2, input_shape[1] // 2)
+        conv9, shape9 = get_conv(192, 192, input_shape=pshape4, kernel_size=3,
+                     padding=1, on_graph=on_graph, device=device,
+                     crop_size=1)
+        conv10, shape10 = get_conv(192, self.nb_class, input_shape=shape9, device=device,
+                     kernel_size=1, padding=1, crop_size=1, on_graph=on_graph)
         self.layer5 = nn.Sequential(
             nn.Dropout(0.5),
-            get_conv(192, 192, input_shape=input_shape, kernel_size=3,
-                     padding=1, on_graph=on_graph, device=device),  # out 8x8
+            conv9,  # out 8x8
             nn.ReLU(),
-            get_conv(192, 10, input_shape=input_shape, device=device, kernel_size=1,
-                     on_graph=on_graph),  # out 8x8
+            conv10,  # out 8x8
             nn.ReLU()
         )
-        
+
         self.drop_out = nn.Dropout()
-        self.fc1 = nn.Linear(10 * input_shape[0] * input_shape[1], 1000)
-        self.fc2 = nn.Linear(1000, 10)
+        self.fc1 = nn.Linear(self.nb_class * shape10[0] * shape10[1], 1000)
+        self.fc2 = nn.Linear(1000, self.nb_class)
 
     def forward(self, x):
         out = self.layer1(x)
@@ -192,8 +202,12 @@ class ConvNet(nn.Module):
         out = self.layer3(out)
         out = self.layer4(out)
         out = self.layer5(out)
-        out = out.reshape(out.size(0), -1)
-        out = self.fc1(out)
-        out = self.drop_out(out)
-        out = self.fc2(out)
+        if args.fully_connected:
+            out = out.reshape(out.size(0), -1)
+            out = self.fc1(out)
+            out = self.drop_out(out)
+            out = self.fc2(out)
+        else:
+            # Global Average Pooling to agregate into 10 values.
+            out = out.mean()
         return out

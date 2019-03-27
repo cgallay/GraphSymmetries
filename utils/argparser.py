@@ -1,8 +1,14 @@
 import argparse
+from utils.config import conf
 
 supported_models = ['ConvNet', 'VGG', 'ResNet18']
+args = None
+
 
 def get_args():
+    global args
+    if args:
+        return args
     parser = argparse.ArgumentParser(
         description='Train CNN.')
     
@@ -30,5 +36,6 @@ def get_args():
                         help='Use a grid graph to represent the image and perform convolutions on it.')
     parser.add_argument('--explore', dest='explore', action='store_true',
                         help='Exploration of the learning rate mode.')
-    
-    return parser.parse_args()
+    parser.set_defaults(**conf)
+    args = parser.parse_args()
+    return args

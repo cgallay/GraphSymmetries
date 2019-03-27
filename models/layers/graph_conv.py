@@ -13,6 +13,9 @@ import math
 
 from scipy import sparse
 import torch
+import torch.nn.functional as F
+import numpy as np
+import pygsp as pg
 
 
 # State-less function.
@@ -49,17 +52,88 @@ def graph_conv(laplacian, x, weight):
 
     return x
 
+# TODO move
+def create_laplacian(size_x, size_y, device='cpu'):
+    graph = pg.graphs.Grid2d(size_x, size_y)
+    laplacian = graph.L.astype(np.float32)
+    laplacian = prepare_laplacian(laplacian)
+    return laplacian.to(device)
+
+# TODO move
+def prepare_laplacian(laplacian):
+    r"""Prepare a graph Laplacian to be fed to a graph convolutional layer."""
+
+    def estimate_lmax(laplacian, tol=5e-3):
+        r"""Estimate the largest eigenvalue of an operator."""
+        lmax = sparse.linalg.eigsh(laplacian, k=1, tol=tol,
+                                   ncv=min(laplacian.shape[0], 10),
+                                   return_eigenvectors=False)
+        lmax = lmax[0]
+        lmax *= 1 + 2*tol  # Be robust to errors.
+        return lmax
+
+    def scale_operator(L, lmax):
+        r"""Scale an operator's eigenvalues from [0, lmax] to [-1, 1]."""
+        I = sparse.identity(L.shape[0], format=L.format, dtype=L.dtype)
+        L *= 2 / lmax
+        L -= I
+        return L
+
+    lmax = estimate_lmax(laplacian)
+    laplacian = scale_operator(laplacian, lmax)
+
+    laplacian = sparse.coo_matrix(laplacian)
+
+    # PyTorch wants a LongTensor (int64) as indices (it'll otherwise convert).
+    indices = np.empty((2, laplacian.nnz), dtype=np.int64)
+    np.stack((laplacian.row, laplacian.col), axis=0, out=indices)
+    indices = torch.from_numpy(indices)
+
+    laplacian = torch.sparse_coo_tensor(indices, laplacian.data, laplacian.shape)
+    laplacian = laplacian.coalesce()  # More efficient subsequent operations.
+    return laplacian
 
 class FixGraphConv(torch.nn.Module):
-    def __init__(self, in_channels, out_channels, laplacian, kernel_size=3, bias=True,
-                 conv=graph_conv):
+    """
+    Convolution on a Grid graph. For images.
+    """
+
+    def __init__(self, in_channels, out_channels, kernel_size=3, bias=True,
+                 input_shape=(32,32), conv=graph_conv, padding=0, crop_size=0,
+                 device='cpu'):
         super().__init__()
-        self.laplacian = laplacian
+        self.new_input_shape = (input_shape[0] + 2 * padding,
+                                input_shape[1] + 2 * padding)
+        self.laplacian = create_laplacian(*self.new_input_shape, device=device)
+
+        self.padding = padding
+        self.input_shape = input_shape
+        self.crop_size = crop_size
         self.conv = GraphConv(in_channels, out_channels, kernel_size=kernel_size,
                               bias=bias, conv=graph_conv)
+    def _pad(self, x):
+        if self.padding > 0:
+            x = x.view(x.size(0), x.size(1), *self.input_shape)
+            x = F.pad(x, (self.padding, self.padding, self.padding, self.padding))
+            x = x.view(x.size(0), x.size(1), -1)
+        return x
     
+    def _crop(self, x):
+        s = self.crop_size
+        if s > 0:
+            x = x.view(x.size(0), x.size(1), *self.new_input_shape)
+            x = x[:, :, s:-s, s:-s]
+            x = x.contiguous()
+            x = x.view(x.size(0), x.size(1), -1)
+        return x
+
     def forward(self, x):
-        return self.conv.forward(self.laplacian, x)
+        x = self._pad(x)
+        x = x.permute(0, 2, 1)  # shape it for the graph conv
+        x = self.conv.forward(self.laplacian, x)
+        x = x.permute(0, 2, 1).contiguous()  # reshape as before
+        x = self._crop(x)
+        return x
 
 
 # State-full class.
