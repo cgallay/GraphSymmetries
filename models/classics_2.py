@@ -106,21 +106,22 @@ class GraphConvNet(nn.Module):
                  nb_class:int=10):
         super(GraphConvNet, self).__init__()
         self.nb_class = nb_class
-        self.layers = []
+        layers = []
         layer, out_shape = get_layer(3, 96, input_shape)
-        self.layers.append(layer)
+        layers.append(layer)
 
         layer, out_shape = get_layer(96, 192, out_shape)
-        self.layers.append(layer)
+        layers.append(layer)
 
         layer, out_shape = get_layer(192, 192, out_shape, pooling_layer=False)
-        self.layers.append(layer)
+        layers.append(layer)
 
         layer, out_shape = get_layer(192, 192, out_shape)
-        self.layers.append(layer)
+        layers.append(layer)
 
         layer, out_shape = get_layer(192, self.nb_class, out_shape)
-        self.layers.append(layer)
+        layers.append(layer)
+        self.seq = nn.Sequential(*layers)
         
 
         print(f"Shape before de Fully connected is {out_shape}")
@@ -129,9 +130,7 @@ class GraphConvNet(nn.Module):
         self.fc2 = nn.Linear(1000, self.nb_class)
 
     def forward(self, x):
-        out = x
-        for layer in self.layers:
-            out = layer(out)
+        out = self.seq(x)
 
         if args.fully_connected:
             out = out.reshape(out.size(0), -1)
