@@ -89,7 +89,7 @@ def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True):
                                kernel_size=5, padding=0, on_graph=True, device=args.device,
                                crop_size=0)
     seq = OrderedDict([
-        ('dropout', nn.Dropout()),
+        ('dropout', nn.Dropout(0.2)),
         ('conv', conv),
         ('relu', nn.ReLU())
     ])
