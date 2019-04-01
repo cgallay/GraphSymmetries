@@ -84,15 +84,15 @@ def get_pool(kernel_size=3, stride=2, padding=1, input_shape=(32, 32), on_graph=
     return pool, out_shape
 
 
-def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True):
+def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True, dropout=True):
     conv, out_shape = get_conv(nb_channel_in, nb_channel_out, input_shape=input_shape,
                                kernel_size=5, padding=0, on_graph=True, device=args.device,
                                crop_size=0)
-    seq = OrderedDict([
-        ('dropout', nn.Dropout(0.2)),
-        ('conv', conv),
-        ('relu', nn.ReLU())
-    ])
+    seq = OrderedDict()
+    if dropout:
+        seq['dropout'] = nn.Dropout(0.2)
+    seq['conv'] = conv
+    seq['relu'] = nn.ReLU()
     if pooling_layer:
         pool, out_shape = get_pool(kernel_size=3, stride=2, padding=1, on_graph=True,
                                input_shape=out_shape)
@@ -113,7 +113,8 @@ class GraphConvNet(nn.Module):
         layer, out_shape = get_layer(96, 192, out_shape)
         layers.append(layer)
 
-        layer, out_shape = get_layer(192, 192, out_shape, pooling_layer=False)
+        layer, out_shape = get_layer(192, 192, out_shape, pooling_layer=False,
+                                    dropout=False)
         layers.append(layer)
 
         layer, out_shape = get_layer(192, 192, out_shape)
