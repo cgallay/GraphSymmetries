@@ -1,4 +1,5 @@
 from typing import Tuple
+from collections import OrderedDict
 
 import torch
 import torch.nn as nn
@@ -83,20 +84,21 @@ def get_pool(kernel_size=3, stride=2, padding=1, input_shape=(32, 32), on_graph=
     return pool, out_shape
 
 
-def get_layer(nb_channel_in, nb_channel_out, input_shape):
+def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True):
     conv, out_shape = get_conv(nb_channel_in, nb_channel_out, input_shape=input_shape,
                                kernel_size=5, padding=0, on_graph=True, device=args.device,
                                crop_size=0)
-
-    pool, out_shape = get_pool(kernel_size=3, stride=2, padding=1, on_graph=True,
+    seq = OrderedDict([
+        ('dropout', nn.Dropout()),
+        ('conv', conv),
+        ('relu', nn.ReLU())
+    ])
+    if pooling_layer:
+        pool, out_shape = get_pool(kernel_size=3, stride=2, padding=1, on_graph=True,
                                input_shape=out_shape)
+        seq['pool'] = pool
 
-    layer = nn.Sequential(
-                nn.Dropout(0.2),
-                conv,
-                nn.ReLU(),
-                pool
-            )
+    layer = nn.Sequential(seq)
     return layer, out_shape
 
 class GraphConvNet(nn.Module):
@@ -104,15 +106,21 @@ class GraphConvNet(nn.Module):
                  nb_class:int=10):
         super(GraphConvNet, self).__init__()
         self.nb_class = nb_class
-        conv1, shape1 = get_conv(3, 96, input_shape=input_shape, kernel_size=5,
-                               padding=1, on_graph=True, device=device,
-                               crop_size=1)  # out 32x32
-        pool1, pshape1 = get_pool(kernel_size=3, stride=2, padding=1, on_graph=True,
-                                  input_shape=shape1)  # out 16x16
-        self.layer1, out_shape = get_layer(3, 96, input_shape)
-        self.layer2, out_shape = get_layer(96, 192, out_shape)
-        self.layer3, out_shape = get_layer(192, 192, out_shape)
-        self.layer4, out_shape = get_layer(192, self.nb_class, out_shape)
+        self.layers = []
+        layer, out_shape = get_layer(3, 96, input_shape)
+        self.layers.append(layer)
+
+        layer, out_shape = get_layer(96, 192, out_shape)
+        self.layers.append(layer)
+
+        layer, out_shape = get_layer(96, 192, out_shape, pooling_layer=False)
+        self.layers.append(layer)
+
+        layer, out_shape = get_layer(192, 192, out_shape)
+        self.layers.append(layer)
+
+        layer, out_shape = get_layer(192, self.nb_class, out_shape)
+        self.layers.append(layer)
         
 
         print(f"Shape before de Fully connected is {out_shape}")
@@ -121,10 +129,10 @@ class GraphConvNet(nn.Module):
         self.fc2 = nn.Linear(1000, self.nb_class)
 
     def forward(self, x):
-        out = self.layer1(x)
-        out = self.layer2(out)
-        out = self.layer3(out)
-        out = self.layer4(out)
+        out = x
+        for layer in self.layers:
+            out = layer(out)
+
         if args.fully_connected:
             out = out.reshape(out.size(0), -1)
             out = self.fc1(out)
