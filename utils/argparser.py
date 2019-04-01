@@ -36,6 +36,8 @@ def get_args():
                         help='Use a grid graph to represent the image and perform convolutions on it.')
     parser.add_argument('--explore', dest='explore', action='store_true',
                         help='Exploration of the learning rate mode.')
+    parser.add_argument('--opti', type=str, choices=['Adam', 'SGD'], default='SGD',
+                        help='Choice of the optimizer.') 
     parser.set_defaults(**conf)
     args = parser.parse_args()
     return args

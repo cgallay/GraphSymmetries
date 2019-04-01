@@ -133,7 +133,11 @@ if __name__ == '__main__':
 
     logger.write_graph(model, next(iter(dataloaders['train']))[0])
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9,
+    if args.opti == 'Adam':
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr,
+                                     weight_decay=args.weight_decay)
+    else:
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9,
                                 weight_decay=args.weight_decay)
 
     if args.restore_from_checkpoint:
