@@ -107,36 +107,36 @@ class GraphConvNet(nn.Module):
         super(GraphConvNet, self).__init__()
         self.nb_class = nb_class
         layers = []
-        layer, out_shape = get_layer(3, 32, input_shape, dropout_rate=0.2)
-        layers.append(layer)
-
-        layer, out_shape = get_layer(32, 32, out_shape, pooling_layer=False,
-                                    dropout_rate=0.2)
-        layers.append(layer)
-
-        layer, out_shape = get_layer(32, 32, out_shape, pooling_layer=False,
-                                    dropout_rate=0.2)
-        layers.append(layer)
-
-        layer, out_shape = get_layer(32, 64, out_shape, dropout_rate=0.0)
+        layer, out_shape = get_layer(3, 64, input_shape, dropout_rate=0.2)
         layers.append(layer)
 
         layer, out_shape = get_layer(64, 64, out_shape, pooling_layer=False,
-                                    dropout_rate=0.4)
+                                    dropout_rate=0.2)
         layers.append(layer)
 
         layer, out_shape = get_layer(64, 64, out_shape, pooling_layer=False,
+                                    dropout_rate=0.2)
+        layers.append(layer)
+
+        layer, out_shape = get_layer(64, 128, out_shape, dropout_rate=0.0)
+        layers.append(layer)
+
+        layer, out_shape = get_layer(128, 128, out_shape, pooling_layer=False,
                                     dropout_rate=0.4)
         layers.append(layer)
 
-        layer, out_shape = get_layer(64, 128, out_shape, pooling_layer=False,
+        layer, out_shape = get_layer(128, 128, out_shape, pooling_layer=False,
                                     dropout_rate=0.4)
         layers.append(layer)
 
-        layer, out_shape = get_layer(128, 128, out_shape, dropout_rate=0.4)
+        layer, out_shape = get_layer(128, 256, out_shape, pooling_layer=False,
+                                    dropout_rate=0.4)
         layers.append(layer)
 
-        layer, out_shape = get_layer(128, self.nb_class, out_shape, dropout_rate=0.4)
+        layer, out_shape = get_layer(256, 256, out_shape, dropout_rate=0.4)
+        layers.append(layer)
+
+        layer, out_shape = get_layer(256, self.nb_class, out_shape, dropout_rate=0.4)
         layers.append(layer)
 
         self.seq = nn.Sequential(*layers)
