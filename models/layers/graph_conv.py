@@ -17,6 +17,9 @@ import torch.nn.functional as F
 import numpy as np
 import pygsp as pg
 
+from utils.argparser import get_args
+args = get_args()
+
 
 # State-less function.
 def graph_conv(laplacian, x, weight):
@@ -53,11 +56,11 @@ def graph_conv(laplacian, x, weight):
     return x
 
 # TODO move
-def create_laplacian(size_x, size_y, device='cpu'):
+def create_laplacian(size_x, size_y):
     graph = pg.graphs.Grid2d(size_x, size_y)
     laplacian = graph.L.astype(np.float32)
     laplacian = prepare_laplacian(laplacian)
-    return laplacian.to(device)
+    return laplacian.to(args.device)
 
 # TODO move
 def prepare_laplacian(laplacian):
@@ -99,12 +102,11 @@ class FixGraphConv(torch.nn.Module):
     """
 
     def __init__(self, in_channels, out_channels, kernel_size=3, bias=True,
-                 input_shape=(32,32), conv=graph_conv, padding=0, crop_size=0,
-                 device='cpu'):
+                 input_shape=(32,32), conv=graph_conv, padding=0, crop_size=0):
         super().__init__()
         self.new_input_shape = (input_shape[0] + 2 * padding,
                                 input_shape[1] + 2 * padding)
-        self.laplacian = create_laplacian(*self.new_input_shape, device=device)
+        self.laplacian = create_laplacian(*self.new_input_shape)
 
         self.padding = padding
         self.input_shape = input_shape

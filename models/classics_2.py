@@ -46,7 +46,7 @@ def get_conv(features_in:int, features_out:int, input_shape:Tuple[int, int]=(32,
 
     if on_graph:
         conv = FixGraphConv(features_in, features_out, input_shape=input_shape,
-                           kernel_size=kernel_size, padding=padding, device=device,
+                           kernel_size=kernel_size, padding=padding,
                            crop_size=crop_size)
         out_shape = t_add(input_shape, padding - crop_size)
         return conv, out_shape
@@ -113,7 +113,7 @@ class GraphConvNet(nn.Module):
         layer, out_shape = get_layer(96, 192, out_shape)
         self.layers.append(layer)
 
-        layer, out_shape = get_layer(96, 192, out_shape, pooling_layer=False)
+        layer, out_shape = get_layer(192, 192, out_shape, pooling_layer=False)
         self.layers.append(layer)
 
         layer, out_shape = get_layer(192, 192, out_shape)
