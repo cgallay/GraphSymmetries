@@ -110,17 +110,17 @@ class GraphConvNet(nn.Module):
         layer, out_shape = get_layer(3, 96, input_shape, dropout_rate=0.2)
         layers.append(layer)
 
-        layer, out_shape = get_layer(96, 192, out_shape)
+        layer, out_shape = get_layer(96, 192, out_shape, dropout_rate=0.0)
         layers.append(layer)
 
         layer, out_shape = get_layer(192, 192, out_shape, pooling_layer=False,
-                                    dropout_rate=0.0)
+                                    dropout_rate=0.4)
         layers.append(layer)
 
-        layer, out_shape = get_layer(192, 192, out_shape)
+        layer, out_shape = get_layer(192, 192, out_shape, dropout_rate=0.4)
         layers.append(layer)
 
-        layer, out_shape = get_layer(192, self.nb_class, out_shape)
+        layer, out_shape = get_layer(192, self.nb_class, out_shape, dropout_rate=0.4)
         layers.append(layer)
         self.seq = nn.Sequential(*layers)
         
