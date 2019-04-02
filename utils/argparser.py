@@ -37,7 +37,9 @@ def get_args():
     parser.add_argument('--explore', dest='explore', action='store_true',
                         help='Exploration of the learning rate mode.')
     parser.add_argument('--opti', type=str, choices=['Adam', 'SGD'], default='SGD',
-                        help='Choice of the optimizer.') 
+                        help='Choice of the optimizer.')
+    parser.add_argument('--L_scale', type=float, default=1.0,
+                        help='scale the eingen values of the laplacian into [-L_scale, L_scale]')
     parser.set_defaults(**conf)
     args = parser.parse_args()
     return args

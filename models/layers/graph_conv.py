@@ -55,14 +55,14 @@ def graph_conv(laplacian, x, weight):
 
     return x
 
-# TODO move
+
 def create_laplacian(size_x, size_y):
     graph = pg.graphs.Grid2d(size_x, size_y)
     laplacian = graph.L.astype(np.float32)
     laplacian = prepare_laplacian(laplacian)
     return laplacian.to(args.device)
 
-# TODO move
+
 def prepare_laplacian(laplacian):
     r"""Prepare a graph Laplacian to be fed to a graph convolutional layer."""
 
@@ -75,15 +75,15 @@ def prepare_laplacian(laplacian):
         lmax *= 1 + 2*tol  # Be robust to errors.
         return lmax
 
-    def scale_operator(L, lmax):
-        r"""Scale an operator's eigenvalues from [0, lmax] to [-1, 1]."""
+    def scale_operator(L, lmax, scale=1):
+        r"""Scale an operator's eigenvalues from [0, lmax] to [-scale, scale]."""
         I = sparse.identity(L.shape[0], format=L.format, dtype=L.dtype)
-        L *= 2 / lmax
+        L *= 2 * scale / lmax
         L -= I
         return L
 
     lmax = estimate_lmax(laplacian)
-    laplacian = scale_operator(laplacian, lmax)
+    laplacian = scale_operator(laplacian, lmax, args.L_scale)
 
     laplacian = sparse.coo_matrix(laplacian)
 
@@ -182,7 +182,7 @@ class GraphConv(torch.nn.Module):
 
     def reset_parameters(self):
         r"""Reset the coefficients and biases to random normal values."""
-        std = 1 / math.sqrt(self.in_channels * self.kernel_size)
+        std = 1 / math.sqrt(self.in_channels * (self.kernel_size + 0.5) / 2)
         self.weight.data.normal_(0, std)
         if self.bias is not None:
             self.bias.data.fill_(0)
