@@ -94,31 +94,22 @@ class GraphConvNet(nn.Module):
         self.nb_class = nb_class
         layers = []
 
-        layer, out_shape = get_layer(3, 96, input_shape, dropout_rate=0.2,
-                                     pooling_layer=False)
-        layers.append(layer)
-        layer, out_shape = get_layer(96, 96, out_shape, dropout_rate=0.0)
+        layer, out_shape = get_layer(3, 192, input_shape, dropout_rate=0.2,
+                                     pooling_layer=True)
         layers.append(layer)
 
 
-        layer, out_shape = get_layer(96, 192, out_shape, dropout_rate=0.5,
-                                     pooling_layer=False)
-        layers.append(layer)
-        layer, out_shape = get_layer(192, 192, out_shape, dropout_rate=0.0)
+        layer, out_shape = get_layer(192, 384, out_shape, dropout_rate=0.5,
+                                     pooling_layer=True)
         layers.append(layer)
 
 
-        layer, out_shape = get_layer(192, 192, out_shape, dropout_rate=0.5,
-                                     pooling_layer=False)
-        layers.append(layer)
-        layer, out_shape = get_layer(192, 192, out_shape, dropout_rate=0.0)
+        layer, out_shape = get_layer(384, 384, out_shape, dropout_rate=0.5,
+                                     pooling_layer=True)
         layers.append(layer)
 
 
-        layer, out_shape = get_layer(192, 192, out_shape, dropout_rate=0.5,
-                                     pooling_layer=False)
-        layers.append(layer)
-        layer, out_shape = get_layer(192, self.nb_class, out_shape, dropout_rate=0.0)
+        layer, out_shape = get_layer(384, self.nb_class, out_shape, dropout_rate=0.0)
         layers.append(layer)
 
         self.seq = nn.Sequential(*layers)
