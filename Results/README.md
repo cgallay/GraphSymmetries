@@ -1,5 +1,22 @@
 # Results
 
+## ConvNet on Graph
+
+commit: [5910a43](https://github.com/cgallay/Semester_Project/tree/5910a43f38024c23ed2158d7e502ff2cf792f7ba)
+
+cmd: `python3.6 main.py --arch ConvNet --on_graph --lr=0.005 --ls 75 100 125 150 --wd=5e-4 --nb_epochs=160`
+
+Accuracy: > 70%
+
+
+nb_para: 938'732
+
+
+Speed: 3.5625 minutes / epoch
+
+
+Note: the network was train without data augmentation and a kernel size of 5.
+
 ## ConvNet on Graph:
 commit: [8cdccc2](https://github.com/cgallay/Semester_Project/tree/8cdccc2ebc6fd6ca73a27efef03bf78c156bceff)
 
