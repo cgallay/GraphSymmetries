@@ -102,7 +102,7 @@ class GraphConvNet(nn.Module):
         layer, out_shape = get_layer(192, 384, out_shape, pooling_layer=True)
         layers.append(layer)
 
-        layers.append(nn.BatchNorm1d(192))
+        layers.append(nn.BatchNorm1d(384))
 
         layer, out_shape = get_layer(384, 384, out_shape, pooling_layer=True)
         layers.append(layer)
