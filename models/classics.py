@@ -22,7 +22,7 @@ def get_pool(kernel_size=3, stride=2, padding=1, input_shape=(32, 32)):
     return pool, out_shape
 
 
-def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True, dropout_rate=0.5):
+def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True, dropout_rate=0.0):
     conv, out_shape = get_conv(nb_channel_in, nb_channel_out, input_shape=input_shape,
                                kernel_size=3, padding=1)
     seq = OrderedDict()
@@ -45,31 +45,27 @@ class ConvNet(nn.Module):
         self.nb_class = nb_class
         layers = []
 
-        layer, out_shape = get_layer(3, 96, input_shape, dropout_rate=0.2,
-                                     pooling_layer=False)
+        layer, out_shape = get_layer(3, 96, input_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(96, 96, out_shape, dropout_rate=0.0)
-        layers.append(layer)
-
-
-        layer, out_shape = get_layer(96, 192, out_shape, dropout_rate=0.5,
-                                     pooling_layer=False)
-        layers.append(layer)
-        layer, out_shape = get_layer(192, 192, out_shape, dropout_rate=0.0)
+        layer, out_shape = get_layer(96, 96, out_shape)
         layers.append(layer)
 
 
-        layer, out_shape = get_layer(192, 192, out_shape, dropout_rate=0.5,
-                                     pooling_layer=False)
+        layer, out_shape = get_layer(96, 192, out_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(192, 192, out_shape, dropout_rate=0.0)
+        layer, out_shape = get_layer(192, 192, out_shape)
         layers.append(layer)
 
 
-        layer, out_shape = get_layer(192, 192, out_shape, dropout_rate=0.5,
-                                     pooling_layer=False)
+        layer, out_shape = get_layer(192, 192, out_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(192, self.nb_class, out_shape, dropout_rate=0.0)
+        layer, out_shape = get_layer(192, 192, out_shape)
+        layers.append(layer)
+
+
+        layer, out_shape = get_layer(192, 192, out_shape, pooling_layer=False)
+        layers.append(layer)
+        layer, out_shape = get_layer(192, self.nb_class, out_shape)
         layers.append(layer)
 
         self.seq = nn.Sequential(*layers)
