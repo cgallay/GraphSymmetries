@@ -11,7 +11,7 @@ from torch.optim.lr_scheduler import MultiStepLR, ExponentialLR
 from models.VGG import vgg11
 from models.resnet import ResNet18
 from models.classics import ConvNet
-from models.classics_2 import GraphConvNet
+from models.classics_graph import GraphConvNet
 from utils.transforms import ToGraph
 from utils.helpers import get_number_of_parma
 from utils.argparser import get_args
@@ -60,7 +60,7 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
 def get_model(model_type='ConvNet', on_graph=False, device='cpu'):
     
     if model_type == 'ConvNet':
-        return GraphConvNet(on_graph=on_graph, device=device)
+            return GraphConvNet() if on_graph else ConvNet()
     if model_type == 'VGG':
         return vgg11()
     if model_type == 'ResNet18':
