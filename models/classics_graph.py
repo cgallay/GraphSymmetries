@@ -97,14 +97,17 @@ class GraphConvNet(nn.Module):
         layer, out_shape = get_layer(3, 192, input_shape, pooling_layer=True)
         layers.append(layer)
 
+        layers.append(nn.BatchNorm1d(192))
 
         layer, out_shape = get_layer(192, 384, out_shape, pooling_layer=True)
         layers.append(layer)
 
+        layers.append(nn.BatchNorm1d(192))
 
         layer, out_shape = get_layer(384, 384, out_shape, pooling_layer=True)
         layers.append(layer)
 
+        layers.append(nn.BatchNorm1d(384))
 
         layer, out_shape = get_layer(384, self.nb_class, out_shape)
         layers.append(layer)
@@ -121,6 +124,7 @@ class GraphConvNet(nn.Module):
 
         if args.fully_connected:
             out = out.reshape(out.size(0), -1)
+            out = self.drop_out(out)
             out = self.fc1(out)
             out = self.drop_out(out)
             out = self.fc2(out)
