@@ -24,7 +24,7 @@ def get_pool(kernel_size=3, stride=2, padding=1, input_shape=(32, 32)):
 
 def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True, dropout_rate=0.5):
     conv, out_shape = get_conv(nb_channel_in, nb_channel_out, input_shape=input_shape,
-                               kernel_size=5, padding=0)
+                               kernel_size=3, padding=1)
     seq = OrderedDict()
     if dropout_rate > 0 :
         seq['dropout'] = nn.Dropout(dropout_rate)
