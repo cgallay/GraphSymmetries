@@ -16,6 +16,8 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 import pygsp as pg
+from torch_geometric.nn import ChebConv
+from torch_geometric.utils import grid
 
 from utils.argparser import get_args
 args = get_args()
@@ -102,17 +104,24 @@ class FixGraphConv(torch.nn.Module):
     """
 
     def __init__(self, in_channels, out_channels, kernel_size=3, bias=True,
-                 input_shape=(32,32), conv=graph_conv, padding=0, crop_size=0):
+                 input_shape=(32,32), conv=graph_conv, padding=0, crop_size=0,
+                 implementation='Deff'):
         super().__init__()
         self.new_input_shape = (input_shape[0] + 2 * padding,
                                 input_shape[1] + 2 * padding)
         self.laplacian = create_laplacian(*self.new_input_shape)
-
+        x, y, w = pg.graphs.Grid2d(*self.new_input_shape).get_edge_list()
+        self.edge_index = torch.tensor([np.concatenate([x,y]), np.concatenate([y,x])], dtype=torch.long)
         self.padding = padding
         self.input_shape = input_shape
         self.crop_size = crop_size
-        self.conv = GraphConv(in_channels, out_channels, kernel_size=kernel_size,
+        self.implementation = implementation
+        if implementation == 'Deff':
+            self.conv = GraphConv(in_channels, out_channels, kernel_size=kernel_size,
                               bias=bias, conv=graph_conv)
+        else:
+            self.conv =  ChebConv(in_channels, out_channels, kernel_size)
+
     def _pad(self, x):
         if self.padding > 0:
             x = x.view(x.size(0), x.size(1), *self.input_shape)
@@ -131,9 +140,12 @@ class FixGraphConv(torch.nn.Module):
 
     def forward(self, x):
         x = self._pad(x)
-        x = x.permute(0, 2, 1)  # shape it for the graph conv
-        x = self.conv.forward(self.laplacian, x)
-        x = x.permute(0, 2, 1).contiguous()  # reshape as before
+        if self.implementation == 'Deff':
+            x = x.permute(0, 2, 1)  # shape it for the graph conv
+            x = self.conv.forward(self.laplacian, x)
+            x = x.permute(0, 2, 1).contiguous()  # reshape as before
+        else:
+            x = self.conv.forward(x, self.edge_index)
         x = self._crop(x)
         return x
 
