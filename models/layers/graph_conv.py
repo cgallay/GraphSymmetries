@@ -17,6 +17,7 @@ import torch.nn.functional as F
 import numpy as np
 import pygsp as pg
 
+from grid2d import Grid2d
 from utils.argparser import get_args
 args = get_args()
 
@@ -57,7 +58,8 @@ def graph_conv(laplacian, x, weight):
 
 
 def create_laplacian(size_x, size_y):
-    graph = pg.graphs.Grid2d(size_x, size_y)
+    diagonal = 1/math.pow(2, 0.5) if args.diagonals else 0.0 
+    graph = Grid2d(size_x, size_y, diagonal=diagonal)
     laplacian = graph.L.astype(np.float32)
     laplacian = prepare_laplacian(laplacian)
     return laplacian.to(args.device)

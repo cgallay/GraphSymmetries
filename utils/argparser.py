@@ -40,6 +40,9 @@ def get_args():
                         help='Choice of the optimizer.')
     parser.add_argument('--L_scale', type=float, default=1.0,
                         help='scale the eingen values of the laplacian into [-L_scale, L_scale]')
+    parser.add_argument('--diagonals', dest='diagonals', action='store_true',
+                        help='Augment the grid graph with diagonals when set, where the weight of the edges is 1/srt(2)')
+    
     parser.set_defaults(**conf)
     args = parser.parse_args()
     return args
