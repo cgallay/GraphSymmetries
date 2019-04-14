@@ -23,7 +23,7 @@ device = torch.device('cpu')
 criterion = nn.CrossEntropyLoss()
 
 def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
-    suported_datasets = ['CIFAR10']
+    suported_datasets = ['CIFAR10', 'AID']
     if dataset not in suported_datasets:
         raise ValueError(f"Dataset {dataset} is not supported")
 
@@ -50,7 +50,10 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
         X_test = torchvision.datasets.CIFAR10('dataset', train=False,
                     transform=transforms.Compose(test_trans), download=True)
     
-    dataloaders = dict()
+    if dataset == 'AID':
+        trans = [transforms.ToTensor(), ToGraph()]
+        dataset = ImageFolder('dataset/AID/', transform=transforms.Compose(trans))
+
     dataloaders['train'] = DataLoader(dataset=X_train, batch_size=batch_size, shuffle=True,
                                       num_workers=4)
     dataloaders['test'] = DataLoader(dataset=X_test, batch_size=batch_size, shuffle=False,
