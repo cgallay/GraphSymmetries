@@ -5,13 +5,15 @@ import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
+from torchvision.datasets import ImageFolder
 from torch.optim.lr_scheduler import MultiStepLR, ExponentialLR
 
-from models.VGG import vgg11
-from models.resnet import ResNet18
-from models.classics import ConvNet
-from models.classics_graph import GraphConvNet
+from models.graph_aid import GraphConvNetAID
+from models.cnn_aid import CNNConvNetAID
+# from models.graph_aid import GraphConvNetAID
+# from models.graph_aid import GraphConvNetAID
+
 from utils.transforms import ToGraph
 from utils.helpers import get_number_of_parma
 from utils.argparser import get_args
@@ -26,6 +28,8 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
     suported_datasets = ['CIFAR10', 'AID']
     if dataset not in suported_datasets:
         raise ValueError(f"Dataset {dataset} is not supported")
+
+    dataloaders = {}
 
     if dataset == 'CIFAR10':
         train_trans = []
@@ -51,8 +55,16 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
                     transform=transforms.Compose(test_trans), download=True)
     
     if dataset == 'AID':
-        trans = [transforms.ToTensor(), ToGraph()]
+        if on_graph:
+            trans = [transforms.ToTensor(), ToGraph()]
+        else:
+            trans = [transforms.ToTensor()]
         dataset = ImageFolder('dataset/AID/', transform=transforms.Compose(trans))
+        train_size = int(0.8 * len(dataset))
+        test_size = len(dataset) - train_size
+        torch.manual_seed(42)
+        X_train, X_test = random_split(dataset, [train_size, test_size])
+
 
     dataloaders['train'] = DataLoader(dataset=X_train, batch_size=batch_size, shuffle=True,
                                       num_workers=4)
@@ -62,12 +74,13 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
 
 def get_model(model_type='ConvNet', on_graph=False, device='cpu'):
     
-    if model_type == 'ConvNet':
-            return GraphConvNet() if on_graph else ConvNet()
-    if model_type == 'VGG':
-        return vgg11()
-    if model_type == 'ResNet18':
-        return ResNet18()
+    if (model_type, args.dataset, args.on_graph) ==\
+        ('ConvNet', 'AID', True):
+        return GraphConvNetAID()
+    if (model_type, args.dataset, args.on_graph) ==\
+        ('ConvNet', 'AID', False):
+        return CNNConvNetAID()
+
 
     raise ValueError(f"Unsuported NN architecture")
 
@@ -120,7 +133,7 @@ if __name__ == '__main__':
     # load the model
     starting_epoch = 0
     
-    dataloaders = get_dataloaders('CIFAR10', data_augmentation=args.data_augmentation,
+    dataloaders = get_dataloaders(args.dataset, data_augmentation=args.data_augmentation,
                                   on_graph=args.on_graph)
     model = None
     if torch.cuda.is_available():

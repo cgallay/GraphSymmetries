@@ -16,6 +16,8 @@ def get_args():
                         help='model name parameter')
     parser.add_argument('--nb_epochs', type=int, default=5,
                         help='Number of epoch for the training.')
+    parser.add_argument('--batch_size', type=int, default=16,
+                        help='Batch size for the training')
     parser.add_argument('--log_dir', type=str, default='Graph',
                         help='Path to the log directory.')
     parser.add_argument('--checkpoints_dir', type=str, default='checkpoints',
@@ -42,7 +44,10 @@ def get_args():
                         help='scale the eingen values of the laplacian into [-L_scale, L_scale]')
     parser.add_argument('--diagonals', dest='diagonals', action='store_true',
                         help='Augment the grid graph with diagonals when set, where the weight of the edges is 1/srt(2)')
-    
+    parser.add_argument('--dataset', type=str, choices=['CIFAR10', 'AID'], default='CIFAR10',
+                        help='Dataset on which to run the experiment.')
     parser.set_defaults(**conf)
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
+    if unknown:
+        print(f"Warning some unkown parameters have been defined: {unknown}")
     return args
