@@ -127,7 +127,6 @@ def train_eval(model, dataloaders, optimizer, train=True):
 
 
 if __name__ == '__main__':
-    global args
     global logger
     args = get_args()
     logger = Logger('Graph')
