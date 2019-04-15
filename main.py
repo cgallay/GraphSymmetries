@@ -18,9 +18,10 @@ from utils.transforms import ToGraph
 from utils.helpers import get_number_of_parma
 from utils.argparser import get_args
 from utils.logger import Logger
+args = get_args()
 
 # TODO add it to an argparser
-batch_size = 128
+batch_size = args.batch_size
 device = torch.device('cpu')
 criterion = nn.CrossEntropyLoss()
 
