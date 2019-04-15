@@ -13,22 +13,37 @@ class CNNConvNetAID(nn.Module):
 
         layers = []
 
-        layer, out_shape = get_layer(3, 192, input_shape, pooling_layer=True)
+        layer, out_shape = get_layer(3, 32, input_shape, pooling_layer=True)
         layers.append(layer)
 
-        layers.append(nn.BatchNorm2d(192))
+        layers.append(nn.BatchNorm2d(32))
 
-        layer, out_shape = get_layer(192, 384, out_shape, pooling_layer=True)
+        layer, out_shape = get_layer(32, 64, out_shape, pooling_layer=True)
         layers.append(layer)
 
-        layers.append(nn.BatchNorm2d(384))
+        layers.append(nn.BatchNorm2d(64))
 
-        layer, out_shape = get_layer(384, 384, out_shape, pooling_layer=True)
+        layer, out_shape = get_layer(64, 64, out_shape, pooling_layer=True)
+        layers.append(layer)
+        
+        layers.append(nn.BatchNorm2d(64))
+        
+        layer, out_shape = get_layer(64, 128, out_shape)
+        layers.append(layer)
+        
+        layers.append(nn.BatchNorm2d(128))
+        
+        layer, out_shape = get_layer(128, 128, out_shape)
+        layers.append(layer)
+        
+        layers.append(nn.BatchNorm2d(128))
+        
+        layer, out_shape = get_layer(128, 64, out_shape)
         layers.append(layer)
 
-        layers.append(nn.BatchNorm2d(384))
-
-        layer, out_shape = get_layer(384, self.nb_class, out_shape)
+        layers.append(nn.BatchNorm2d(64))
+        
+        layer, out_shape = get_layer(64, self.nb_class, out_shape)
         layers.append(layer)
 
         self.seq = nn.Sequential(*layers)
@@ -54,7 +69,7 @@ class CNNConvNetAID(nn.Module):
 
 def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True, dropout_rate=0.0):
     conv, out_shape = get_conv(in_channels=nb_channel_in, out_channels=nb_channel_out, input_shape=input_shape,
-                               kernel_size=5, padding=0, crop_size=0)
+                               kernel_size=3, padding=1, crop_size=0)
     seq = OrderedDict()
     if dropout_rate > 0 :
         seq['dropout'] = nn.Dropout(dropout_rate)
