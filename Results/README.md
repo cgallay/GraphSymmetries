@@ -1,5 +1,33 @@
 # Results
 
+## ConvNet on Graph AID
+
+commit: [4f7d65d](https://github.com/cgallay/Semester_Project/tree/4f7d65d956510ec0f16691bcfc926115505ad055)
+
+cmd: `python3.6 main.py --arch ConvNet --lr=0.01 --wd=5e-4 --nb_epochs=300 --on_graph --dataset=AID`
+
+Accuracy: 82.30%
+
+Train set 0.8 and Test set 0.2
+
+nb_param: 987'140
+
+Speed: 18 min/epoch
+
+## ConvNet on Graph AID
+
+commit: [4f7d65d](https://github.com/cgallay/Semester_Project/tree/4f7d65d956510ec0f16691bcfc926115505ad055)
+
+cmd: `python3.6 main.py --arch ConvNet --lr=0.01 --wd=5e-4 --nb_epochs=300 --dataset=AID`
+
+Accuracy: 80.20%
+
+Train set 0.8 and Test set 0.2
+
+nb_param: 1'150'852
+
+Speed: 18 min/epoch
+
 ## ConvNet on Graph
 
 commit: [5910a43](https://github.com/cgallay/Semester_Project/tree/5910a43f38024c23ed2158d7e502ff2cf792f7ba)
