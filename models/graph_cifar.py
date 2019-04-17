@@ -13,7 +13,7 @@ args = get_args()
 
 
 class GraphConvNetCIFAR(nn.Module):
-    def __init__(self, input_shape=(600,600), nb_class=30):
+    def __init__(self, input_shape=(32, 32), nb_class=10):
         super(GraphConvNetCIFAR, self).__init__()
         self.nb_class = nb_class
 
