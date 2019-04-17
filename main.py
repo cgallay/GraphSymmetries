@@ -11,8 +11,8 @@ from torch.optim.lr_scheduler import MultiStepLR, ExponentialLR
 
 from models.graph_aid import GraphConvNetAID
 from models.cnn_aid import CNNConvNetAID
-# from models.graph_aid import GraphConvNetAID
-# from models.graph_aid import GraphConvNetAID
+from models.graph_cifar import GraphConvNetCIFAR
+from models.cnn_cifar import CNNConvNetCIFAR
 
 from utils.transforms import ToGraph
 from utils.helpers import get_number_of_parma
@@ -81,6 +81,15 @@ def get_model(model_type='ConvNet', on_graph=False, device='cpu'):
     if (model_type, args.dataset, args.on_graph) ==\
         ('ConvNet', 'AID', False):
         return CNNConvNetAID()
+    if (model_type, args.dataset, args.on_graph) ==\
+            ('ConvNet', 'CIFAR10', True):
+        return GraphConvNetCIFAR()
+    
+    if (model_type, args.dataset, args.on_graph) ==\
+            ('ConvNet', 'CIFAR10', False):
+        return CNNConvNetCIFAR()
+
+
 
 
     raise ValueError(f"Unsuported NN architecture")
