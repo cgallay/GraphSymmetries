@@ -159,7 +159,7 @@ if __name__ == '__main__':
     logger.write_graph(model, next(iter(dataloaders['train']))[0])
 
     if args.opti == 'Adam':
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr,
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, eps=0.1,
                                      weight_decay=args.weight_decay)
     else:
         optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9,
