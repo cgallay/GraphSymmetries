@@ -12,30 +12,30 @@ class CNNConvNetCIFAR(nn.Module):
         self.nb_class = nb_class
         layers = []
         
-        layer, out_shape = get_layer(3, 96, input_shape, pooling_layer=False)
+        layer, out_shape = get_layer(3, 80, input_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(96, 96, out_shape)
-        layers.append(layer)
-
-        layers.append(nn.BatchNorm2d(96))
-
-        layer, out_shape = get_layer(96, 192, out_shape, pooling_layer=False)
-        layers.append(layer)
-        layer, out_shape = get_layer(192, 192, out_shape)
+        layer, out_shape = get_layer(80, 80, out_shape)
         layers.append(layer)
 
-        layers.append(nn.BatchNorm2d(192))
+        layers.append(nn.BatchNorm2d(80))
 
-        layer, out_shape = get_layer(192, 192, out_shape, pooling_layer=False)
+        layer, out_shape = get_layer(80, 140, out_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(192, 192, out_shape)
+        layer, out_shape = get_layer(140, 140, out_shape)
         layers.append(layer)
 
-        layers.append(nn.BatchNorm2d(192))
+        layers.append(nn.BatchNorm2d(140))
 
-        layer, out_shape = get_layer(192, 192, out_shape, pooling_layer=False)
+        layer, out_shape = get_layer(140, 140, out_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(192, self.nb_class, out_shape)
+        layer, out_shape = get_layer(140, 140, out_shape)
+        layers.append(layer)
+
+        layers.append(nn.BatchNorm2d(140))
+
+        layer, out_shape = get_layer(140, 140, out_shape, pooling_layer=False)
+        layers.append(layer)
+        layer, out_shape = get_layer(140, self.nb_class, out_shape)
         layers.append(layer)
 
         self.seq = nn.Sequential(*layers)
