@@ -11,31 +11,34 @@ class CNNConvNetCIFAR(nn.Module):
         super(CNNConvNetCIFAR, self).__init__()
         self.nb_class = nb_class
         layers = []
-        
-        layer, out_shape = get_layer(3, 80, input_shape, pooling_layer=False)
+
+        nb_filter_1 = 80
+        nb_filter_2 = 140
+
+        layer, out_shape = get_layer(3, nb_filter_1, input_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(80, 80, out_shape)
+        layer, out_shape = get_layer(nb_filter_1, nb_filter_1, out_shape)
         layers.append(layer)
 
-        layers.append(nn.BatchNorm2d(80))
+        layers.append(nn.BatchNorm2d(nb_filter_1))
 
-        layer, out_shape = get_layer(80, 140, out_shape, pooling_layer=False)
+        layer, out_shape = get_layer(nb_filter_1, nb_filter_2, out_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(140, 140, out_shape)
-        layers.append(layer)
-
-        layers.append(nn.BatchNorm2d(140))
-
-        layer, out_shape = get_layer(140, 140, out_shape, pooling_layer=False)
-        layers.append(layer)
-        layer, out_shape = get_layer(140, 140, out_shape)
+        layer, out_shape = get_layer(nb_filter_2, nb_filter_2, out_shape)
         layers.append(layer)
 
-        layers.append(nn.BatchNorm2d(140))
+        layers.append(nn.BatchNorm2d(nb_filter_2))
 
-        layer, out_shape = get_layer(140, 140, out_shape, pooling_layer=False)
+        layer, out_shape = get_layer(nb_filter_2, nb_filter_2, out_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(140, self.nb_class, out_shape)
+        layer, out_shape = get_layer(nb_filter_2, nb_filter_2, out_shape)
+        layers.append(layer)
+
+        layers.append(nn.BatchNorm2d(nb_filter_2))
+
+        layer, out_shape = get_layer(nb_filter_2, nb_filter_2, out_shape, pooling_layer=False)
+        layers.append(layer)
+        layer, out_shape = get_layer(nb_filter_2, self.nb_class, out_shape)
         layers.append(layer)
 
         self.seq = nn.Sequential(*layers)
