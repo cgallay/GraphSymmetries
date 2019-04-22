@@ -18,31 +18,34 @@ class GraphConvNetCIFAR(nn.Module):
         self.nb_class = nb_class
 
         layers = []
-        
-        layer, out_shape = get_layer(3, 96, input_shape, pooling_layer=False)
+
+        nb_filter_1 = 96
+        nb_filter_2 = 192
+
+        layer, out_shape = get_layer(3, nb_filter_1, input_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(96, 96, out_shape)
+        layer, out_shape = get_layer(nb_filter_1, nb_filter_1, out_shape)
         layers.append(layer)
 
-        layers.append(nn.BatchNorm1d(96))
+        layers.append(nn.BatchNorm1d(nb_filter_1))
 
-        layer, out_shape = get_layer(96, 192, out_shape, pooling_layer=False)
+        layer, out_shape = get_layer(nb_filter_1, nb_filter_2, out_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(192, 192, out_shape)
-        layers.append(layer)
-
-        layers.append(nn.BatchNorm1d(192))
-
-        layer, out_shape = get_layer(192, 192, out_shape, pooling_layer=False)
-        layers.append(layer)
-        layer, out_shape = get_layer(192, 192, out_shape)
+        layer, out_shape = get_layer(nb_filter_2, nb_filter_2, out_shape)
         layers.append(layer)
 
-        layers.append(nn.BatchNorm1d(192))
+        layers.append(nn.BatchNorm1d(nb_filter_2))
 
-        layer, out_shape = get_layer(192, 192, out_shape, pooling_layer=False)
+        layer, out_shape = get_layer(nb_filter_2, nb_filter_2, out_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(192, self.nb_class, out_shape)
+        layer, out_shape = get_layer(nb_filter_2, nb_filter_2, out_shape)
+        layers.append(layer)
+
+        layers.append(nn.BatchNorm1d(nb_filter_2))
+
+        layer, out_shape = get_layer(nb_filter_2, nb_filter_2, out_shape, pooling_layer=False)
+        layers.append(layer)
+        layer, out_shape = get_layer(nb_filter_2, self.nb_class, out_shape)
         layers.append(layer)
 
         self.seq = nn.Sequential(*layers)
