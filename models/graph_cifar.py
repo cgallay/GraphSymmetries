@@ -53,13 +53,18 @@ class GraphConvNetCIFAR(nn.Module):
 
         print(f"Shape before de Fully connected is {out_shape}")
         self.drop_out = nn.Dropout()
-        self.fc1 = nn.Linear(self.nb_class * out_shape[0] * out_shape[1], 1000)
-        self.fc2 = nn.Linear(1000, self.nb_class)
+ 
+        if not args.global_average_pooling:
+            print("FC layer used at the end")
+            self.fc1 = nn.Linear(self.nb_class * out_shape[0] * out_shape[1], 1000)
+            self.fc2 = nn.Linear(1000, self.nb_class)
+        else:
+            print("global average used")
 
     def forward(self, x):
         out = self.seq(x)
 
-        if args.fully_connected:
+        if not args.global_agerage_pooling:
             out = out.reshape(out.size(0), -1)
             out = self.drop_out(out)
             out = self.fc1(out)
@@ -67,7 +72,8 @@ class GraphConvNetCIFAR(nn.Module):
             out = self.fc2(out)
         else:
             # Global Average Pooling to agregate into 10 values.
-            out = out.mean()
+            out = out.mean(2)
+            
         return out
 
 def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True, dropout_rate=0.0):

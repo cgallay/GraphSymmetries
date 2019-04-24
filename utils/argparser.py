@@ -46,6 +46,9 @@ def get_args():
                         help='Augment the grid graph with diagonals when set, where the weight of the edges is 1/srt(2)')
     parser.add_argument('--dataset', type=str, choices=['CIFAR10', 'AID'], default='CIFAR10',
                         help='Dataset on which to run the experiment.')
+    parser.add_argument('--global_average_pooling', '--GAP', dest='global_average_pooling', action='store_true',
+                        help='Apply global averge pooling as last layer instead of a fully connected in order to enforce invariance')
+
     parser.set_defaults(**conf)
     args, unknown = parser.parse_known_args()
     if unknown:
