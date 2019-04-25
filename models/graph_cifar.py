@@ -64,7 +64,7 @@ class GraphConvNetCIFAR(nn.Module):
     def forward(self, x):
         out = self.seq(x)
 
-        if not args.global_agerage_pooling:
+        if not args.global_average_pooling:
             out = out.reshape(out.size(0), -1)
             out = self.drop_out(out)
             out = self.fc1(out)
