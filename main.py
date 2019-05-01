@@ -55,8 +55,9 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
         perc = 0.2
         t_size = len(X_train)
         t_sub_size = int(perc * t_size)
-        X_train, _ = torch.utils.data.random_split(train_set, [t_sub_size, t_size - t_sub_size2])
+        X_train, _ = torch.utils.data.random_split(X_train, [t_sub_size, t_size - t_sub_size])
         print(f"Working with {len(X_train)} images which is {perc} of the dataset") 
+
         X_test = torchvision.datasets.CIFAR10('dataset', train=False,
                     transform=transforms.Compose(test_trans), download=True)
     
