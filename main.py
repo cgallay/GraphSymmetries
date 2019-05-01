@@ -52,6 +52,10 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
         
         X_train = torchvision.datasets.CIFAR10('dataset', train=True,
                     transform=transforms.Compose(train_trans), download=True)
+        t_size = len(X_train)
+        t_sub_size = int(0.2 * t_s)
+        X_train, _ = torch.utils.data.random_split(train_set, [t_sub_size, t_size - t_sub_size2])
+        
         X_test = torchvision.datasets.CIFAR10('dataset', train=False,
                     transform=transforms.Compose(test_trans), download=True)
     
