@@ -121,7 +121,7 @@ class FixGraphConv(torch.nn.Module):
         if args.vertical_graph:
             self.lap1 = create_vertical_laplacian(*self.new_input_shape, True)
             self.lap2 = create_vertical_laplacian(*self.new_input_shape, False)
-
+            self.perc = torch.nn.Parameter(data=torch.empty(self.out_channels).normal_(mean=0.5, std=0.1)).clamp(0,1)  # importance of graph 1 
         else:
             self.laplacian = create_laplacian(*self.new_input_shape)
 
@@ -150,9 +150,15 @@ class FixGraphConv(torch.nn.Module):
         x = self._pad(x)
         x = x.permute(0, 2, 1)  # shape it for the graph conv
         if args.vertical_graph:
+            # print(x.shape)
             out1 = self.conv.forward(self.lap1, x)
             out2 = self.conv.forward(self.lap2, x)
-            x = (out1 + out2 / 2)
+            self.prec.clamp_(0, 1)
+            x = self.perc * out1 + (1-self.perc) * out2 
+            # print(out1.shape)
+            # print(out2.shape)
+            # print('===========================================')
+            # x = (out1 + out2 / 2)
         else:
             x = self.conv.forward(self.laplacian, x)
         x = x.permute(0, 2, 1).contiguous()  # reshape as before
