@@ -68,6 +68,7 @@ def repr_args(agrs):
             'data': args.dataset,
             'GAP': args.global_average_pooling,
             'on_graph': args.on_graph,
+            'on_vertival': args.vertical_graph,
             'time': str(datetime.datetime.now())[:16]
             }
     return repr(meta)
