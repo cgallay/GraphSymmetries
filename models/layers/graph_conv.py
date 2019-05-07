@@ -121,7 +121,7 @@ class FixGraphConv(torch.nn.Module):
         if args.vertical_graph:
             self.lap1 = create_vertical_laplacian(*self.new_input_shape, True)
             self.lap2 = create_vertical_laplacian(*self.new_input_shape, False)
-            self.perc = torch.nn.Parameter(data=torch.empty(self.out_channels).normal_(mean=0.5, std=0.1)).clamp(0,1)  # importance of graph 1 
+            self.perc = torch.nn.Parameter(data=torch.empty(out_channels).normal_(mean=0.5, std=0.1)).clamp(0,1)  # importance of graph 1 
         else:
             self.laplacian = create_laplacian(*self.new_input_shape)
 
