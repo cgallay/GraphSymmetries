@@ -19,6 +19,7 @@ import pygsp as pg
 
 from grid2d import Grid2d
 from utils.argparser import get_args
+from utils.graph import LineGrid2d
 args = get_args()
 
 
@@ -60,6 +61,14 @@ def graph_conv(laplacian, x, weight):
 def create_laplacian(size_x, size_y):
     diagonal = 1/math.pow(2, 0.5) if args.diagonals else 0.0 
     graph = Grid2d(size_x, size_y, diagonal=diagonal)
+    laplacian = graph.L.astype(np.float32)
+    laplacian = prepare_laplacian(laplacian)
+    return laplacian.to(args.device)
+
+
+def create_vertical_laplacian(size_x, size_y, vertical=True):
+    diagonal = 1/math.pow(2, 0.5) if args.diagonals else 0.0 
+    graph = LineGrid2d(size_x, size_y, vertical)
     laplacian = graph.L.astype(np.float32)
     laplacian = prepare_laplacian(laplacian)
     return laplacian.to(args.device)
@@ -108,7 +117,13 @@ class FixGraphConv(torch.nn.Module):
         super().__init__()
         self.new_input_shape = (input_shape[0] + 2 * padding,
                                 input_shape[1] + 2 * padding)
-        self.laplacian = create_laplacian(*self.new_input_shape)
+        
+        if args.vertical_graph:
+            self.lap1 = create_vertical_laplacian(*self.new_input_shape, True)
+            self.lap2 = create_vertical_laplacian(*self.new_input_shape, False)
+
+        else:
+            self.laplacian = create_laplacian(*self.new_input_shape)
 
         self.padding = padding
         self.input_shape = input_shape
@@ -134,7 +149,12 @@ class FixGraphConv(torch.nn.Module):
     def forward(self, x):
         x = self._pad(x)
         x = x.permute(0, 2, 1)  # shape it for the graph conv
-        x = self.conv.forward(self.laplacian, x)
+        if args.vertical_graph:
+            out1 = self.conv.forward(self.lap1, x)
+            out2 = self.conv.forward(self.lap2, x)
+            x = (out1 + out2 / 2)
+        else:
+            x = self.conv.forward(self.laplacian, x)
         x = x.permute(0, 2, 1).contiguous()  # reshape as before
         x = self._crop(x)
         return x

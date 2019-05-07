@@ -48,6 +48,9 @@ def get_args():
                         help='Dataset on which to run the experiment.')
     parser.add_argument('--global_average_pooling', '--GAP', dest='global_average_pooling', action='store_true',
                         help='Apply global averge pooling as last layer instead of a fully connected in order to enforce invariance')
+    parser.add_argument('--vertical_graph', 'V_Graph', dest='vertical_graph', action='store_true',
+                        help='Perform the convolution on two different graphs that are composed of vertical and horizontal edges only')
+
 
     parser.set_defaults(**conf)
     args, unknown = parser.parse_known_args()
