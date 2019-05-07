@@ -1,4 +1,6 @@
 import argparse
+import datetime
+
 from utils.config import conf
 
 supported_models = ['ConvNet', 'VGG', 'ResNet18']
@@ -57,3 +59,15 @@ def get_args():
     if unknown:
         print(f"Warning some unkown parameters have been defined: {unknown}")
     return args
+
+
+def repr_args(agrs):
+
+    meta = {
+            'lr': args.lr,
+            'data': args.dataset,
+            'GAP': args.global_average_pooling,
+            'on_graph': args.on_graph,
+            'time': str(datetime.datetime.now())[:16]
+            }
+    return repr(meta)
