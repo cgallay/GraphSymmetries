@@ -145,6 +145,7 @@ if __name__ == '__main__':
     global logger
     args = get_args()
     logger = Logger(f'Graph/{repr_args(args)}')
+    logger.write_hparam(args.__dict__)
     # load the model
     starting_epoch = 0
     

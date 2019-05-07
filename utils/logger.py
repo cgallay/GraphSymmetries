@@ -24,6 +24,8 @@ class Logger():
             self.tensorboard.add_scalars(f'metrics/{key}', {curve: value}, index)
         if increment:
             self.step += 1
+    def write_hparam(self, hparam):
+        self.tensorboard.add_text('hyperparameters', repr(hparam))
     
     def plot_eploration(self, learning_rates, losses):
         fig=plt.figure()
