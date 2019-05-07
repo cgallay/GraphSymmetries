@@ -144,7 +144,7 @@ def train_eval(model, dataloaders, optimizer, train=True):
 if __name__ == '__main__':
     global logger
     args = get_args()
-    logger = Logger(f'Graph/{reprargs(args)}')
+    logger = Logger(f'Graph/{repr_args(args)}')
     # load the model
     starting_epoch = 0
     
