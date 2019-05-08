@@ -116,7 +116,7 @@ class FixGraphConv(torch.nn.Module):
                  input_shape=(32,32), conv=graph_conv, padding=0, crop_size=0, graph_pooling=False):
         super().__init__()
         if not self.graph_pooling:
-            if not out_channels % 2 = 0:
+            if not out_channels % 2 == 0:
                 raise InputError("When no pooling over the subgraph is applyed the number of out feature should be even.")
             out_channels = out_channels // 2
             
