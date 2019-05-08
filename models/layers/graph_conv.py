@@ -113,21 +113,28 @@ class FixGraphConv(torch.nn.Module):
     """
 
     def __init__(self, in_channels, out_channels, kernel_size=3, bias=True,
-                 input_shape=(32,32), conv=graph_conv, padding=0, crop_size=0):
+                 input_shape=(32,32), conv=graph_conv, padding=0, crop_size=0, graph_pooling=False):
         super().__init__()
+        if not self.graph_pooling:
+            if not out_channels % 2 = 0:
+                raise InputError("When no pooling over the subgraph is applyed the number of out feature should be even.")
+            out_channels = out_channels // 2
+            
         self.new_input_shape = (input_shape[0] + 2 * padding,
                                 input_shape[1] + 2 * padding)
         
         if args.vertical_graph:
             self.lap1 = create_vertical_laplacian(*self.new_input_shape, True)
             self.lap2 = create_vertical_laplacian(*self.new_input_shape, False)
-            self.perc = torch.nn.Parameter(data=torch.empty(out_channels).normal_(mean=0.5, std=0.1))  # importance of graph 1 
+            # Temporarly removed so that it doesn't count in the parameters
+            # self.perc = torch.nn.Parameter(data=torch.empty(out_channels).normal_(mean=0.5, std=0.1))  # importance of graph 1 
         else:
             self.laplacian = create_laplacian(*self.new_input_shape)
 
         self.padding = padding
         self.input_shape = input_shape
         self.crop_size = crop_size
+        self.graph_pooling = graph_pooling  # when set to true, the features of subgraph are pooled together with mean pooling
         self.conv = GraphConv(in_channels, out_channels, kernel_size=kernel_size,
                               bias=bias, conv=graph_conv)
     def _pad(self, x):
@@ -153,8 +160,16 @@ class FixGraphConv(torch.nn.Module):
             # print(x.shape)
             out1 = self.conv.forward(self.lap1, x)
             out2 = self.conv.forward(self.lap2, x)
-            perc = self.perc.clamp(0, 1)
-            x = perc * out1 + (1-perc) * out2 
+            
+            if self.graph_pooling:
+                x = (out1 + out2) / 2
+            else:
+                x = torch.cat((out1, out2), 2)
+
+            # This version of merging is ledgit but we have to test something else
+            # perc = self.perc.clamp(0, 1)
+            # x = perc * out1 + (1-perc) * out2 
+            
             # print(out1.shape)
             # print(out2.shape)
             # print('===========================================')

@@ -13,7 +13,7 @@ def get_pool(kernel_size=3, stride=2, padding=1, input_shape=(32, 32)):
 
 
 def get_conv(features_in, features_out, input_shape=(32, 32),
-             kernel_size=3, padding=0, crop_size=0):
+             kernel_size=3, padding=0, crop_size=0, graph_pooling=False):
     """
     Define a convolution on Graph
 
@@ -43,7 +43,8 @@ def get_conv(features_in, features_out, input_shape=(32, 32),
 
     conv = FixGraphConv(features_in, features_out, input_shape=input_shape,
                         kernel_size=kernel_size, padding=padding,
-                        crop_size=crop_size)
+                        crop_size=crop_size,
+                        graph_pooling=graph_pooling)
     out_shape = t_add(input_shape, padding - crop_size)
     return conv, out_shape
 

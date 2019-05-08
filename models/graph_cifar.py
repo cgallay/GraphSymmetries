@@ -45,7 +45,7 @@ class GraphConvNetCIFAR(nn.Module):
 
         layer, out_shape = get_layer(nb_filter_2, nb_filter_2, out_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(nb_filter_2, self.nb_class, out_shape)
+        layer, out_shape = get_layer(nb_filter_2, self.nb_class, out_shape, graph_pooling=True)
         layers.append(layer)
 
         self.seq = nn.Sequential(*layers)
