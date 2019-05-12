@@ -12,8 +12,8 @@ class CNNConvNetCIFAR(nn.Module):
         self.nb_class = nb_class
         layers = []
 
-        nb_filter_1 = 80
-        nb_filter_2 = 140
+        nb_filter_1 = 16
+        nb_filter_2 = 34
 
         layer, out_shape = get_layer(3, nb_filter_1, input_shape, pooling_layer=False)
         layers.append(layer)
