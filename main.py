@@ -16,7 +16,7 @@ from models.cnn_cifar import CNNConvNetCIFAR
 
 from utils.transforms import ToGraph
 from utils.helpers import get_number_of_parma
-from utils.argparser import get_args, repr_args
+from utils.argparser import get_args, main_args
 from utils.logger import Logger
 args = get_args()
 
@@ -144,8 +144,9 @@ def train_eval(model, dataloaders, optimizer, train=True):
 if __name__ == '__main__':
     global logger
     args = get_args()
-    logger = Logger(f'Graph/{repr_args(args)}')
-    print(f'Run id is : {args.run}')
+    mainArgs = main_args(args)
+    logger = Logger(f'Graph/{repr(mainArgs)}')
+    print(f"Run id is : {mainArgs['run']}")
     logger.write_hparam(args.__dict__)
     # load the model
     starting_epoch = 0

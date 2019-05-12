@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import uuid
 
 from utils.config import conf
 
@@ -61,7 +62,7 @@ def get_args():
     return args
 
 
-def repr_args(agrs):
+def main_args(agrs):
 
     meta = {
             'time': str(datetime.datetime.now())[:16],
@@ -70,6 +71,6 @@ def repr_args(agrs):
             'GAP': args.global_average_pooling,
             'on_graph': args.on_graph,
             'on_vertival': args.vertical_graph,
-            'run:' : str(uuid.uuid4())[:8]
+            'run' : str(uuid.uuid4())[:8]
             }
-    return repr(meta)
+    return meta
