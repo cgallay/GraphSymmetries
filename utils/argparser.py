@@ -64,11 +64,12 @@ def get_args():
 def repr_args(agrs):
 
     meta = {
+            'time': str(datetime.datetime.now())[:16],
             'lr': args.lr,
             'data': args.dataset,
             'GAP': args.global_average_pooling,
             'on_graph': args.on_graph,
             'on_vertival': args.vertical_graph,
-            'time': str(datetime.datetime.now())[:16]
+            'run:' : str(uuid.uuid4())[:8]
             }
     return repr(meta)
