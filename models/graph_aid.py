@@ -12,9 +12,10 @@ from utils.helpers import t_add, conv_output_shape
 args = get_args()
 
 
-def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True, dropout_rate=0.0):
+def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True, dropout_rate=0.0,
+              graph_pooling=False):
     conv, out_shape = get_conv(nb_channel_in, nb_channel_out, input_shape=input_shape,
-                               kernel_size=5, padding=0, crop_size=0)
+                               kernel_size=5, padding=0, crop_size=0, graph_pooling=graph_pooling)
     seq = OrderedDict()
     if dropout_rate > 0 :
         seq['dropout'] = nn.Dropout(dropout_rate)
@@ -64,7 +65,7 @@ class GraphConvNetAID(nn.Module):
 
         layers.append(nn.BatchNorm1d(64))
         
-        layer, out_shape = get_layer(64, self.nb_class, out_shape)
+        layer, out_shape = get_layer(64, self.nb_class, out_shape, graph_pooling=True)
         layers.append(layer)
 
         self.seq = nn.Sequential(*layers)
