@@ -19,8 +19,8 @@ class GraphConvNetCIFAR(nn.Module):
 
         layers = []
 
-        nb_filter_1 = 32 
-        nb_filter_2 = 64
+        nb_filter_1 = 66 
+        nb_filter_2 = 98
 
         layer, out_shape = get_layer(3, nb_filter_1, input_shape, pooling_layer=False)
         layers.append(layer)
@@ -79,7 +79,7 @@ class GraphConvNetCIFAR(nn.Module):
 def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True, dropout_rate=0.0,
               graph_pooling=False):
     conv, out_shape = get_conv(nb_channel_in, nb_channel_out, input_shape=input_shape,
-                               kernel_size=5, padding=0, crop_size=0, graph_pooling=graph_pooling)
+                               kernel_size=2, padding=0, crop_size=0, graph_pooling=graph_pooling)
     seq = OrderedDict()
     if dropout_rate > 0 :
         seq['dropout'] = nn.Dropout(dropout_rate)
