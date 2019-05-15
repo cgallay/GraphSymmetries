@@ -11,39 +11,41 @@ class CNNConvNetAID(nn.Module):
         super(CNNConvNetAID, self).__init__()
         self.nb_class = nb_class
 
+        f1, f2, f3 = 32, 64, 128
+
         layers = []
 
-        layer, out_shape = get_layer(3, 32, input_shape, pooling_layer=True)
+        layer, out_shape = get_layer(3, f1, input_shape, pooling_layer=True)
         layers.append(layer)
 
-        layers.append(nn.BatchNorm2d(32))
+        layers.append(nn.BatchNorm2d(f1))
 
-        layer, out_shape = get_layer(32, 64, out_shape, pooling_layer=True)
-        layers.append(layer)
-
-        layers.append(nn.BatchNorm2d(64))
-
-        layer, out_shape = get_layer(64, 64, out_shape, pooling_layer=True)
-        layers.append(layer)
-        
-        layers.append(nn.BatchNorm2d(64))
-        
-        layer, out_shape = get_layer(64, 128, out_shape)
-        layers.append(layer)
-        
-        layers.append(nn.BatchNorm2d(128))
-        
-        layer, out_shape = get_layer(128, 128, out_shape)
-        layers.append(layer)
-        
-        layers.append(nn.BatchNorm2d(128))
-        
-        layer, out_shape = get_layer(128, 64, out_shape)
+        layer, out_shape = get_layer(f1, f2, out_shape, pooling_layer=True)
         layers.append(layer)
 
-        layers.append(nn.BatchNorm2d(64))
+        layers.append(nn.BatchNorm2d(f2))
+
+        layer, out_shape = get_layer(f2, f2, out_shape, pooling_layer=True)
+        layers.append(layer)
         
-        layer, out_shape = get_layer(64, self.nb_class, out_shape)
+        layers.append(nn.BatchNorm2d(f2))
+        
+        layer, out_shape = get_layer(f2, f3, out_shape)
+        layers.append(layer)
+        
+        layers.append(nn.BatchNorm2d(f3))
+        
+        layer, out_shape = get_layer(f3, f3, out_shape)
+        layers.append(layer)
+        
+        layers.append(nn.BatchNorm2d(f3))
+        
+        layer, out_shape = get_layer(f3, f2, out_shape)
+        layers.append(layer)
+
+        layers.append(nn.BatchNorm2d(f2))
+        
+        layer, out_shape = get_layer(f2, self.nb_class, out_shape)
         layers.append(layer)
 
         self.seq = nn.Sequential(*layers)
