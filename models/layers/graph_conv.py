@@ -73,6 +73,14 @@ def create_vertical_laplacian(size_x, size_y, vertical=True):
     laplacian = prepare_laplacian(laplacian)
     return laplacian.to(args.device)
 
+def create_random_walk_matrix(size_x, size_y, mode=0):
+    """
+    differents modes:
+
+    0: use the grid2d graph
+    """
+    pass
+
 
 def prepare_laplacian(laplacian):
     r"""Prepare a graph Laplacian to be fed to a graph convolutional layer."""

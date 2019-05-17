@@ -27,24 +27,24 @@ class CNNConvNetAID(nn.Module):
 
         layer, out_shape = get_layer(f2, f2, out_shape, pooling_layer=True)
         layers.append(layer)
-        
+
         layers.append(nn.BatchNorm2d(f2))
-        
+
         layer, out_shape = get_layer(f2, f3, out_shape)
         layers.append(layer)
-        
+
         layers.append(nn.BatchNorm2d(f3))
-        
+
         layer, out_shape = get_layer(f3, f3, out_shape)
         layers.append(layer)
-        
+
         layers.append(nn.BatchNorm2d(f3))
-        
+
         layer, out_shape = get_layer(f3, f2, out_shape)
         layers.append(layer)
 
         layers.append(nn.BatchNorm2d(f2))
-        
+
         layer, out_shape = get_layer(f2, self.nb_class, out_shape)
         layers.append(layer)
 
