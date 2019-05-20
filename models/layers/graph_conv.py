@@ -81,7 +81,8 @@ def create_random_walk_matrix(size_x, size_y, graph_orientations={}):
     """
     graph = LineGrid2d(size_x, size_y, graph_orientations)
     rand_walk = np.diag(np.ones(graph.d.shape) / graph.d) @ graph.A
-    return rand_walk
+    rand_walk = rand_walk.float()
+    return rand_walk.to(args.device)
 
 
 def prepare_laplacian(laplacian):
@@ -129,17 +130,19 @@ class FixGraphConv(torch.nn.Module):
             if not out_channels % 2 == 0:
                 raise InputError("When no pooling over the subgraph is applyed the number of out feature should be even.")
             out_channels = out_channels // 2
-            
+
         self.new_input_shape = (input_shape[0] + 2 * padding,
                                 input_shape[1] + 2 * padding)
-        
+
         if args.vertical_graph:
             self.lap1 = create_vertical_laplacian(*self.new_input_shape, True)
             self.lap2 = create_vertical_laplacian(*self.new_input_shape, False)
             # Temporarly removed so that it doesn't count in the parameters
             # self.perc = torch.nn.Parameter(data=torch.empty(out_channels).normal_(mean=0.5, std=0.1))  # importance of graph 1 
         else:
-            self.laplacian = create_laplacian(*self.new_input_shape)
+            # self.laplacian = create_laplacian(*self.new_input_shape)
+            self.laplacian = create_random_walk_matrix(*self.new_input_shape, {'top', 'bottom',
+                                                                              'left', 'right'})
 
         self.padding = padding
         self.input_shape = input_shape
@@ -153,7 +156,7 @@ class FixGraphConv(torch.nn.Module):
             x = F.pad(x, (self.padding, self.padding, self.padding, self.padding))
             x = x.view(x.size(0), x.size(1), -1)
         return x
-    
+
     def _crop(self, x):
         s = self.crop_size
         if s > 0:
