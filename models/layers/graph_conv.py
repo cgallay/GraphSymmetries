@@ -13,6 +13,7 @@ import math
 
 from scipy import sparse
 import torch
+from torch import nn
 import torch.nn.functional as F
 import numpy as np
 import pygsp as pg
@@ -145,22 +146,26 @@ class FixGraphConv(torch.nn.Module):
         self.new_input_shape = (input_shape[0] + 2 * padding,
                                 input_shape[1] + 2 * padding)
 
-        if args.vertical_graph:
-            self.lap1 = create_vertical_laplacian(*self.new_input_shape, True)
-            self.lap2 = create_vertical_laplacian(*self.new_input_shape, False)
-            # Temporarly removed so that it doesn't count in the parameters
-            # self.perc = torch.nn.Parameter(data=torch.empty(out_channels).normal_(mean=0.5, std=0.1))  # importance of graph 1 
+        # Create the random walk matrix for each sub-graph
+        rand_walks = []
+        for graph in args.graphs:
+            print(graph)
+            rand_walks.append(create_random_walk_matrix(*self.new_input_shape, graph))
+
+        if args.same_filters:
+            self.conv = GraphConv(in_channels, out_channels, kernel_size=kernel_size,
+                                  bias=bias, conv=graph_conv)
         else:
-            # self.laplacian = create_laplacian(*self.new_input_shape)
-            self.laplacian = create_random_walk_matrix(*self.new_input_shape, {'top', 'bottom',
-                                                                              'left', 'right'})
+            convs = []
+            for i in range(len(args.graphs)):
+                convs.append(GraphConv(in_channels, out_channels, kernel_size=kernel_size,
+                                  bias=bias, conv=graph_conv))
+            self.convs = nn.ModuleList(convs)
 
         self.padding = padding
         self.input_shape = input_shape
         self.crop_size = crop_size
         self.graph_pooling = graph_pooling  # when set to true, the features of subgraph are pooled together with mean pooling
-        self.conv = GraphConv(in_channels, out_channels, kernel_size=kernel_size,
-                              bias=bias, conv=graph_conv)
     def _pad(self, x):
         if self.padding > 0:
             x = x.view(x.size(0), x.size(1), *self.input_shape)
@@ -178,28 +183,30 @@ class FixGraphConv(torch.nn.Module):
         return x
 
     def forward(self, x):
+        """
+        x is of shape [batch_size, nb_node, nb_features_in]
+        """
         x = self._pad(x)
         x = x.permute(0, 2, 1)  # shape it for the graph conv
-        if args.vertical_graph:
-            # print(x.shape)
-            out1 = self.conv.forward(self.lap1, x)
-            out2 = self.conv.forward(self.lap2, x)
-            
-            if self.graph_pooling:
-                x = (out1 + out2) / 2
-            else:
-                x = torch.cat((out1, out2), 2)
 
-            # This version of merging is ledgit but we have to test something else
-            # perc = self.perc.clamp(0, 1)
-            # x = perc * out1 + (1-perc) * out2 
-            
-            # print(out1.shape)
-            # print(out2.shape)
-            # print('===========================================')
-            # x = (out1 + out2 / 2)
+        # Compute outputs
+        outs = []
+        for i, rand_walk in enumerate(self.convs):
+            if args.same_filters:
+                conv = self.conv
+            else:
+                conv = self.convs[i]
+            outs.append(conv(rand_walk, x)
+
+
+        # Merge output
+        if self.is_last_layer or args.way_of_merge == 'mean':
+            x = torch.stack(outs).mean(0)
         else:
-            x = self.conv.forward(self.laplacian, x)
+            if args.way_of_merge == 'concat':
+                # flat all the output for a node
+                x = torch.cat(outs, -1)
+
         x = x.permute(0, 2, 1).contiguous()  # reshape as before
         x = self._crop(x)
         return x
