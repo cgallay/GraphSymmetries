@@ -15,8 +15,8 @@ class LineGrid2d(Graph):
 
         for orientation in graph_orientations:
             if orientation not in {'left', 'right'
-                                   'top', 'bottom'}
-                raise InputError(f"{orientation} is not a valid orienftation for the graph")
+                                   'top', 'bottom'}:
+                raise ValueError(f"{orientation} is not a valid orienftation for the graph")
 
         if N2 is None:
             N2 = N1
