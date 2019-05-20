@@ -9,38 +9,57 @@ from scipy.sparse import block_diag
 from pygsp import utils
 from pygsp.graphs import Graph
 
+
 class LineGrid2d(Graph):
-    def __init__(self, N1=16, N2=None, vertical=True, **kwargs):
-        
+    def __init__(self, N1=16, N2=None, graph_orientations={}, **kwargs):
+
         if N2 is None:
             N2 = N1
-        
-        
+
+
         self.N1 = N1
         self.N2 = N2
 
         N = N1 * N2
 
-        if vertical:
+        W = sparse.csr_matrix((N, N))
+
+        if 'bottom' in graph_orientations:
             diag = np.ones(N - N2)
             delta = -N2
-        else:
+            W += sparse.diags(diagonals=[diag],
+                         offsets=[delta],
+                         shape=(N, N),
+                         format='csr',
+                         dtype='float').transpose()
+        if 'top' in graph_orientations:
+            diag = np.ones(N - N2)
+            delta = N2
+            W += sparse.diags(diagonals=[diag],
+                         offsets=[delta],
+                         shape=(N, N),
+                         format='csr',
+                         dtype='float').transpose()
+        if 'left' in graph_orientations:
             diag = np.ones(N - 1)
             diag[(N2 - 1)::N2] = 0
             delta = -1
-        
-        
-        W = sparse.diags(diagonals=[diag],
+            W += sparse.diags(diagonals=[diag],
                          offsets=[delta],
                          shape=(N, N),
                          format='csr',
                          dtype='float')
-        
-        W = utils.symmetrize(W, method='tril')
-        
-        if vertical:
-            W = W.transpose()
-        
+
+        if 'right' in graph_orientations:
+            diag = np.ones(N - 1)
+            diag[(N2 - 1)::N2] = 0
+            delta = 1
+            W += sparse.diags(diagonals=[diag],
+                         offsets=[delta],
+                         shape=(N, N),
+                         format='csr',
+                         dtype='float')
+
 
         x = np.kron(np.ones((N1, 1)), (np.arange(N2)/float(N2)).reshape(N2, 1))
         y = np.kron(np.ones((N2, 1)), np.arange(N1)/float(N1)).reshape(N, 1)

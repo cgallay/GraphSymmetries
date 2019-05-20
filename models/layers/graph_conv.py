@@ -68,18 +68,20 @@ def create_laplacian(size_x, size_y):
 
 def create_vertical_laplacian(size_x, size_y, vertical=True):
     diagonal = 1/math.pow(2, 0.5) if args.diagonals else 0.0 
-    graph = LineGrid2d(size_x, size_y, vertical)
+    graph = LineGrid2d(size_x, size_y, {'top', 'bottom'} if vertical else {'left', 'right'})
     laplacian = graph.L.astype(np.float32)
     laplacian = prepare_laplacian(laplacian)
     return laplacian.to(args.device)
 
-def create_random_walk_matrix(size_x, size_y, mode=0):
+def create_random_walk_matrix(size_x, size_y, graph_orientations={}):
     """
     differents modes:
 
     0: use the grid2d graph
     """
-    pass
+    graph = LineGrid2d(size_x, size_y, graph_orientations)
+    rand_walk = np.diag(np.ones(graph.d.shape) / graph.d) @ graph.A
+    return rand_walk
 
 
 def prepare_laplacian(laplacian):
