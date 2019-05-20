@@ -14,9 +14,9 @@ class LineGrid2d(Graph):
     def __init__(self, N1=16, N2=None, graph_orientations={}, **kwargs):
 
         for orientation in graph_orientations:
-            if orientation not in {'left', 'right'
+            if orientation not in {'left', 'right',
                                    'top', 'bottom'}:
-                raise ValueError(f"{orientation} is not a valid orienftation for the graph")
+                raise ValueError(f"{orientation} is not a valid orientation for the graph")
 
         if N2 is None:
             N2 = N1
