@@ -81,7 +81,7 @@ def create_random_walk_matrix(size_x, size_y, graph_orientations={}):
     """
     graph = LineGrid2d(size_x, size_y, graph_orientations)
     rand_walk = np.diag(np.ones(graph.d.shape) / graph.d) @ graph.A
-    rand_walk = rand_walk.float()
+    rand_walk = torch.from_numpy(rand_walk).float()
     return rand_walk.to(args.device)
 
 
