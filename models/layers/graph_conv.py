@@ -81,7 +81,18 @@ def create_random_walk_matrix(size_x, size_y, graph_orientations={}):
     """
     graph = LineGrid2d(size_x, size_y, graph_orientations)
     rand_walk = np.diag(np.ones(graph.d.shape) / graph.d) @ graph.A
-    rand_walk = torch.from_numpy(rand_walk).float()
+    rand_walk = rand_walk.astype(np.float32)
+
+    # Convert to pytorch sparse tensor
+    rand_walk = sparse.coo_matrix(rand_walk)
+
+    # PyTorch wants a LongTensor (int64) as indices (it'll otherwise convert).
+    indices = np.empty((2, rand_walk.nnz), dtype=np.int64)
+    np.stack((rand_walk.row, rand_walk.col), axis=0, out=indices)
+    indices = torch.from_numpy(indices)
+
+    rand_walk = torch.sparse_coo_tensor(indices, rand_walk.data, rand_walk.shape)
+    rand_walk = rand_walk.coalesce()  # More efficient subsequent operations
     return rand_walk.to(args.device)
 
 
