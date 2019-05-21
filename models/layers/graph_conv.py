@@ -187,7 +187,7 @@ class FixGraphConv(torch.nn.Module):
 
     def forward(self, x):
         """
-        x is of shape [batch_size, nb_node, nb_features_in]
+        x is of shape [batch_size, nb_features_ini, nb_node]
         """
         # x = self._pad(x)
         x = x.permute(0, 2, 1)  # shape it for the graph conv
@@ -207,7 +207,7 @@ class FixGraphConv(torch.nn.Module):
             out = torch.stack(outs).mean(0)
 
         if self.merge_way == 'cat':
-            # flat all the output for a node
+            # concatenate on the last dim (dim of the features)
             out = torch.cat(outs, -1)
 
         out = out.permute(0, 2, 1).contiguous()  # reshape as before
