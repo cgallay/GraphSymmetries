@@ -45,7 +45,7 @@ class GraphConvNetCIFAR(nn.Module):
 
         layer, out_shape = get_layer(nb_filter_2, nb_filter_2, out_shape, pooling_layer=False)
         layers.append(layer)
-        layer, out_shape = get_layer(nb_filter_2, self.nb_class, out_shape, graph_pooling=True)
+        layer, out_shape = get_layer(nb_filter_2, self.nb_class, out_shape, last_layer=True)
         layers.append(layer)
 
         self.seq = nn.Sequential(*layers)
@@ -73,16 +73,27 @@ class GraphConvNetCIFAR(nn.Module):
         else:
             # Global Average Pooling to agregate into 10 values.
             out = out.mean(2)
-            
+
         return out
 
-def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True, dropout_rate=0.0,
-              graph_pooling=False):
+def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True, 
+              last_layer=False):
+
+    # Read config file or argparse arguments
+    merge_way = 'cat'
+    same_filters=False
+    underlying_graphs = [{'left', 'right', 'bottom', 'top'}]
+
+    if last_layer:
+        merge_way = 'mean'
+
     conv, out_shape = get_conv(nb_channel_in, nb_channel_out, input_shape=input_shape,
-                               kernel_size=2, padding=0, crop_size=0, graph_pooling=graph_pooling)
+                               kernel_size=2, merge_way=merge_way, same_filters=same_filters,
+                               underlying_graphs=underlying_graphs)
+
     seq = OrderedDict()
-    if dropout_rate > 0 :
-        seq['dropout'] = nn.Dropout(dropout_rate)
+    #if dropout_rate > 0 :
+    #    seq['dropout'] = nn.Dropout(dropout_rate)
     seq['conv'] = conv
     seq['relu'] = nn.ReLU()
     if pooling_layer:
