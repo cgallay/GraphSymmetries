@@ -14,7 +14,7 @@ def get_args():
         return args
     parser = argparse.ArgumentParser(
         description='Train CNN.')
-    
+
     parser.add_argument('--arch', type=str, choices=supported_models, required=True,
                         help='model name parameter')
     parser.add_argument('--nb_epochs', type=int, default=5,
