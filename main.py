@@ -147,9 +147,10 @@ if __name__ == '__main__':
     logger = Logger(f'Graph/{repr(mainArgs)}')
     print(f"Run id is : {mainArgs['run']}")
     logger.write_hparam(args.__dict__)
+    logger.write_conv_arch(args.conv_arch)
     # load the model
     starting_epoch = 0
-    
+
     dataloaders = get_dataloaders(args.dataset, data_augmentation=args.data_augmentation,
                                   on_graph=args.on_graph)
     model = None

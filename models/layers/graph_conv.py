@@ -172,7 +172,7 @@ class FixGraphConv(torch.nn.Module):
         # Create the random walk matrix for each sub-graph
         self.rand_walks = []
         for graph in underlying_graphs:
-            print(graph)
+            # print(graph)
             self.rand_walks.append(create_random_walk_matrix(*input_shape, graph))
 
         if same_filters:

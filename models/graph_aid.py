@@ -8,7 +8,7 @@ from scipy import sparse
 from models.layers.graph_conv import FixGraphConv
 from models.layers.utils_graph import get_conv, get_pool
 from utils.argparser import get_args
-from utils.helpers import t_add, conv_output_shape
+from utils.helpers import t_add, conv_output_shape, json2dict
 args = get_args()
 
 
@@ -16,9 +16,10 @@ def get_layer(nb_channel_in, nb_channel_out, input_shape, pooling_layer=True,
               last_layer=False):
 
     # Read config file or argparse arguments
-    merge_way = 'cat'
-    same_filters=False
-    underlying_graphs = [{'left', 'right', 'bottom', 'top'}]
+    conf = json2dict(args.conv_arch)
+    merge_way = conf['merge_way']
+    same_filters = conf['same_filters']
+    underlying_graphs = conf['underlying_graphs']  # [{'left', 'right', 'bottom', 'top'}]
 
     if last_layer:
         merge_way = 'mean'

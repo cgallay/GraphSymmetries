@@ -53,7 +53,8 @@ def get_args():
                         help='Apply global averge pooling as last layer instead of a fully connected in order to enforce invariance')
     parser.add_argument('--vertical_graph', '--V_Graph', dest='vertical_graph', action='store_true',
                         help='Perform the convolution on two different graphs that are composed of vertical and horizontal edges only')
-
+    parser.add_argument('--conv_arch', type=str,
+                        help='Filename that set the config for the type of convolution')
 
     parser.set_defaults(**conf)
     args, unknown = parser.parse_known_args()
