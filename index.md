@@ -15,15 +15,16 @@ Coming from all that background, we want to check which symeties is worth exploi
 
 To exploit the symmetries, we works on graph where convolution is invariant to permutation of neighbouring nodes. Network we design will have invariance property to different transformation depending on the underlying graph we use. We present here the different underlying graph we used and explain their group symmetry.
 
-
+![2d Grid](docs/images/2dGrid.png)
 First graph, the 2dGrid graph is the simplest regular graph defined on the plane. It's undirected edges gives him multiple symmetries. The ones we are interested in are: rotation of 90 degrees and mirroring.
 
 
+![undirected Horizontal and Vertical](docs/images/vertical_horizontal.png)
 The second kind of graphs are undirected vertical or horizontal edges. The symmetries found here are vertical and horizontal flips.
 
  
 
- 
+![All directions](docs/images/all_direction.png)
 Last type of graphs are simple directed graph. Those graph doesn’t contain any symmetry but allow the information to flow across the image when combined with other graphs.
 
 
