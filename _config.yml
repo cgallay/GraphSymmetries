@@ -1,9 +1,8 @@
 title: How to choose the image’s symmetries with graph neural network
 email: galc201093@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
-  Write an awesome description for your new site here. You can edit this
-  line in _config.yml. It will appear in your document head meta (for
-  Google search results) and in your feed.xml site description.
+  Study of symmeties present in a datasets.
+  
 twitter_username: gallaycharles
 github_username: cgallay
 minimal_mistakes_skin: default
