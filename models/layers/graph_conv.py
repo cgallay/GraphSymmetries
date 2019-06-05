@@ -13,6 +13,7 @@ import math
 
 from scipy import sparse
 import torch
+from torch import nn
 import torch.nn.functional as F
 import numpy as np
 import pygsp as pg
@@ -135,74 +136,83 @@ class FixGraphConv(torch.nn.Module):
     """
 
     def __init__(self, in_channels, out_channels, kernel_size=3, bias=True,
-                 input_shape=(32,32), conv=graph_conv, padding=0, crop_size=0, graph_pooling=False):
+                 input_shape=(32,32), conv=graph_conv, merge_way='mean', same_filters=True,
+                 underlying_graphs=None):
+        """
+
+        same_filters: bool
+            when true the same filter is used on each different underlying sub-graphs
+        underlying_graphs: list[Set[str]]
+            list of combinaison of graph orientations
+
+        """
         super().__init__()
-        if not graph_pooling and args.vertical_graph:
-            if not out_channels % 2 == 0:
-                raise InputError("When no pooling over the subgraph is applyed the number of out feature should be even.")
-            out_channels = out_channels // 2
 
-        self.new_input_shape = (input_shape[0] + 2 * padding,
-                                input_shape[1] + 2 * padding)
+        if underlying_graphs is None:
+            underlying_graphs = [{'left', 'right', 'top', 'bottom'}]
 
-        if args.vertical_graph:
-            self.lap1 = create_vertical_laplacian(*self.new_input_shape, True)
-            self.lap2 = create_vertical_laplacian(*self.new_input_shape, False)
-            # Temporarly removed so that it doesn't count in the parameters
-            # self.perc = torch.nn.Parameter(data=torch.empty(out_channels).normal_(mean=0.5, std=0.1))  # importance of graph 1 
+
+        self.merge_way = merge_way
+        self.same_filters = same_filters
+
+        # TODO check for commun practice to do assert
+        assert merge_way in {'mean', 'cat'}, "invalid way of merging the outputs of the convolution"
+        # assert filters in {'same', 'diff'}, "filters to use for the different underlying graph"
+
+
+        # compute the number of output channel
+        # When concatenation the output of the convs the number of output channels should be divided by 2
+        if merge_way == 'cat':
+            if not out_channels % len(underlying_graphs) == 0:
+                raise ValueError(f"""When no pooling over the subgraph is applyed the number of out feature should be
+                                 diviadable by the number of underlying graphs which is {len(underlying_graphs)} here.""")
+            out_channels = out_channels // len(underlying_graphs)
+
+
+        # Create the random walk matrix for each sub-graph
+        self.rand_walks = []
+        for graph in underlying_graphs:
+            # print(graph)
+            self.rand_walks.append(create_random_walk_matrix(*input_shape, graph))
+
+        if same_filters:
+            self.conv = GraphConv(in_channels, out_channels, kernel_size=kernel_size,
+                                  bias=bias, conv=graph_conv)
         else:
-            # self.laplacian = create_laplacian(*self.new_input_shape)
-            self.laplacian = create_random_walk_matrix(*self.new_input_shape, {'top', 'bottom',
-                                                                              'left', 'right'})
-
-        self.padding = padding
-        self.input_shape = input_shape
-        self.crop_size = crop_size
-        self.graph_pooling = graph_pooling  # when set to true, the features of subgraph are pooled together with mean pooling
-        self.conv = GraphConv(in_channels, out_channels, kernel_size=kernel_size,
-                              bias=bias, conv=graph_conv)
-    def _pad(self, x):
-        if self.padding > 0:
-            x = x.view(x.size(0), x.size(1), *self.input_shape)
-            x = F.pad(x, (self.padding, self.padding, self.padding, self.padding))
-            x = x.view(x.size(0), x.size(1), -1)
-        return x
-
-    def _crop(self, x):
-        s = self.crop_size
-        if s > 0:
-            x = x.view(x.size(0), x.size(1), *self.new_input_shape)
-            x = x[:, :, s:-s, s:-s]
-            x = x.contiguous()
-            x = x.view(x.size(0), x.size(1), -1)
-        return x
+            convs = []
+            for i in range(len(underlying_graphs)):
+                convs.append(GraphConv(in_channels, out_channels, kernel_size=kernel_size,
+                                  bias=bias, conv=graph_conv))
+            self.convs = nn.ModuleList(convs)
 
     def forward(self, x):
-        x = self._pad(x)
+        """
+        x is of shape [batch_size, nb_features_ini, nb_node]
+        """
+        # x = self._pad(x)
         x = x.permute(0, 2, 1)  # shape it for the graph conv
-        if args.vertical_graph:
-            # print(x.shape)
-            out1 = self.conv.forward(self.lap1, x)
-            out2 = self.conv.forward(self.lap2, x)
-            
-            if self.graph_pooling:
-                x = (out1 + out2) / 2
-            else:
-                x = torch.cat((out1, out2), 2)
 
-            # This version of merging is ledgit but we have to test something else
-            # perc = self.perc.clamp(0, 1)
-            # x = perc * out1 + (1-perc) * out2 
-            
-            # print(out1.shape)
-            # print(out2.shape)
-            # print('===========================================')
-            # x = (out1 + out2 / 2)
-        else:
-            x = self.conv.forward(self.laplacian, x)
-        x = x.permute(0, 2, 1).contiguous()  # reshape as before
-        x = self._crop(x)
-        return x
+        # Compute outputs
+        outs = []
+        for i, rand_walk in enumerate(self.rand_walks):
+            if self.same_filters:
+                conv = self.conv
+            else:
+                conv = self.convs[i]
+            outs.append(conv(rand_walk, x))
+
+
+        # Merge output
+        if self.merge_way == 'mean':
+            out = torch.stack(outs).mean(0)
+
+        if self.merge_way == 'cat':
+            # concatenate on the last dim (dim of the features)
+            out = torch.cat(outs, -1)
+
+        out = out.permute(0, 2, 1).contiguous()  # reshape as before
+        # x = self._crop(x)
+        return out
 
 
 # State-full class.

@@ -13,7 +13,8 @@ def get_pool(kernel_size=3, stride=2, padding=1, input_shape=(32, 32)):
 
 
 def get_conv(features_in, features_out, input_shape=(32, 32),
-             kernel_size=3, padding=0, crop_size=0, graph_pooling=False):
+             kernel_size=3, merge_way='mean', same_filters=True,
+             underlying_graphs=None):
     """
     Define a convolution on Graph
 
@@ -21,7 +22,7 @@ def get_conv(features_in, features_out, input_shape=(32, 32),
 
     In case of padding we construct a noramal graph but from the output graph, we remove the verticies
     that are on the side. (If a verticies has less than 4 neibough or the max number of neigbour it is removed
-    from the graph.)  
+    from the graph.) 
 
     Param:
     features_in:
@@ -33,21 +34,16 @@ def get_conv(features_in, features_out, input_shape=(32, 32),
     kernel_size:
         number of chebyshev polynom to use for aproximation.
         It can be seen as the further filter can see in term of hope.
-    padding:
-        The number of zero to add on each side.
-    crop_size:
-        Number of node to remove from the grid graph (on the border).
-        Idealy it should be equal to K in order to remove border effect.
     """
-
+    if underlying_graphs is None:
+        underlying_graphs = [{'left', 'right', 'top', 'bottom'}]
 
     conv = FixGraphConv(features_in, features_out, input_shape=input_shape,
-                        kernel_size=kernel_size, padding=padding,
-                        crop_size=crop_size,
-                        graph_pooling=graph_pooling)
-    out_shape = t_add(input_shape, padding - crop_size)
-    return conv, out_shape
-
+                        kernel_size=kernel_size,
+                        merge_way=merge_way,
+                        same_filters=same_filters,
+                        underlying_graphs=underlying_graphs)
+    return conv, input_shape
 
 class GraphMaxPool2d(nn.Module):
     def __init__(self, kernel_size=3, stride=2, padding=1, input_shape=(32, 32)):
@@ -56,7 +52,7 @@ class GraphMaxPool2d(nn.Module):
         self.stride = stride
         self.out_shape = conv_output_shape(input_shape, kernel_size, stride, padding=padding)
         self.pooling = nn.MaxPool2d(kernel_size=kernel_size, stride=stride, padding=padding)
-    
+
     def forward(self, x):
         # TODO reshaping (view)
         shape = x.shape

@@ -1,3 +1,4 @@
+import json
 from functools import reduce
 
 def get_number_of_parma(model):
@@ -27,3 +28,8 @@ def conv_output_shape(h_w, kernel_size=1, stride=1, padding=0, dilation=1):
     h = floor( ((h_w[0] + (2 * padding) - ( dilation * (kernel_size[0] - 1) ) - 1 )/ stride) + 1)
     w = floor( ((h_w[1] + (2 * padding) - ( dilation * (kernel_size[1] - 1) ) - 1 )/ stride) + 1)
     return h, w
+
+def json2dict(path):
+    json1_file = open(path)
+    json1_str = json1_file.read()
+    return json.loads(json1_str)

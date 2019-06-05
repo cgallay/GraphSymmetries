@@ -45,11 +45,11 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
                                            (0.2023, 0.1994, 0.2010))]
         train_trans += base_trans
         test_trans += base_trans
-        
+
         if on_graph:
             train_trans.append(ToGraph())
             test_trans.append(ToGraph())
-        
+
         X_train = torchvision.datasets.CIFAR10('dataset', train=True,
                     transform=transforms.Compose(train_trans), download=True)
         perc = 0.2
@@ -60,7 +60,7 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
 
         X_test = torchvision.datasets.CIFAR10('dataset', train=False,
                     transform=transforms.Compose(test_trans), download=True)
-    
+
     if dataset == 'AID':
         if on_graph:
             trans = [transforms.ToTensor(), ToGraph()]
@@ -80,7 +80,7 @@ def get_dataloaders(dataset='CIFAR10', data_augmentation=False, on_graph=False):
     return dataloaders
 
 def get_model(model_type='ConvNet', on_graph=False, device='cpu'):
-    
+
     if (model_type, args.dataset, args.on_graph) ==\
         ('ConvNet', 'AID', True):
         return GraphConvNetAID()
@@ -90,7 +90,6 @@ def get_model(model_type='ConvNet', on_graph=False, device='cpu'):
     if (model_type, args.dataset, args.on_graph) ==\
             ('ConvNet', 'CIFAR10', True):
         return GraphConvNetCIFAR()
-    
     if (model_type, args.dataset, args.on_graph) ==\
             ('ConvNet', 'CIFAR10', False):
         return CNNConvNetCIFAR()
@@ -148,9 +147,10 @@ if __name__ == '__main__':
     logger = Logger(f'Graph/{repr(mainArgs)}')
     print(f"Run id is : {mainArgs['run']}")
     logger.write_hparam(args.__dict__)
+    logger.write_conv_arch(args.conv_arch)
     # load the model
     starting_epoch = 0
-    
+
     dataloaders = get_dataloaders(args.dataset, data_augmentation=args.data_augmentation,
                                   on_graph=args.on_graph)
     model = None

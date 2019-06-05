@@ -2,6 +2,8 @@ from tensorboardX import SummaryWriter
 
 from matplotlib import pyplot as plt
 
+from utils.helpers import json2dict
+
 class Logger():
     def __init__(self, log_dir):
         self.tensorboard = SummaryWriter(log_dir=log_dir)
@@ -24,9 +26,13 @@ class Logger():
             self.tensorboard.add_scalars(f'metrics/{key}', {curve: value}, index)
         if increment:
             self.step += 1
+
+    def write_conv_arch(self, path):
+        self.tensorboard.add_text('conv_arch', repr(json2dict(path)))
+
     def write_hparam(self, hparam):
         self.tensorboard.add_text('hyperparameters', repr(hparam))
-    
+
     def plot_eploration(self, learning_rates, losses):
         fig=plt.figure()
         ax = fig.add_subplot(1,1,1)
