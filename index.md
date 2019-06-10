@@ -41,7 +41,12 @@ To exploit those symmetries people have apply transformations to the input image
 {: .text-justify}
 
 
-But creating those artificial data introduce a lot of correlation into the wights learned during training. What if you could exploit those symmetry in a smarter way and build them directly into the network ? What if the network you design could react in a predictable way when faced with transformed data? This property is what we call equivariance. In the case of CNN equivariance to translation allows weight sharing and has been shown to help a lot. Recently [Cohen](https://github.com/tscohen/GrouPy), has shown that you can design network equivariant to any transformation from any group. In his implementation the weights of the filter are shared with 90 degree rotations versions of the input. As an illustration of the utility, the network will have to learn only one edge detector, while a standard CNN would have to learn two vertical and two horizontal ones.
+<figure style="width: 200px" class="align-right">
+     <a href="docs/images/low_layer_filters.jpeg"><img src="docs/images/low_layer_filters.jpeg"></a>
+    <figcaption>Figure 1: Example of filters learned by a standard CNN</figcaption>
+</figure>
+
+But creating those artificial data introduce a lot of correlation into the wights learned during training. What if you could exploit those symmetry in a smarter way and build them directly into the network ? What if the network you design could react in a predictable way when faced with transformed data? This property is what we call equivariance. In the case of CNN equivariance to translation allows weight sharing and has been shown to help a lot. Recently [Cohen](https://github.com/tscohen/GrouPy), has shown that you can design network equivariant to any transformation from any group. In his implementation the weights of the filter are shared with 90 degree rotations versions of the input. As an illustration of the utility, the network will have to learn only one edge detector, while a standard CNN would have to learn two vertical and two horizontal ones (See Figure 1).
 {: .text-justify}
 
 > “Convolutional structure is not just a sufficient, but
