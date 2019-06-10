@@ -3,6 +3,13 @@ title:  "How to choose the image’s symmetries with graph neural network"
 layout: splash
 classes: wide
 
+excerpt: "[Charles Gallay](https://github.com/cgallay), [Michaël Defferrard](http://deff.ch) and [Nathanaël Perraudin](https://perraudin.info)"
+header:
+  overlay_image: docs/images/symmetries.png
+  overlay_filter: rgba(125, 125, 125, 0.9)
+  caption: "Photo credit: [**Wikipedia**](https://en.wikipedia.org/wiki/Symmetry_group)"
+
+
 feature_row:
   - image_path: docs/images/2dGrid.png
     alt: "placeholder image 1"
@@ -37,7 +44,9 @@ To exploit those symmetries people have apply transformations to the input image
 But creating those artificial data introduce a lot of correlation into the wights learned during training. What if you could exploit those symmetry in a smarter way and build them directly into the network ? What if the network you design could react in a predictable way when faced with transformed data? This property is what we call equivariance. In the case of CNN equivariance to translation allows weight sharing and has been shown to help a lot. Recently [Cohen](https://github.com/tscohen/GrouPy), has shown that you can design network equivariant to any transformation from any group. In his implementation the weights of the filter are shared with 90 degree rotations versions of the input. As an illustration of the utility, the network will have to learn only one edge detector, while a standard CNN would have to learn two vertical and two horizontal ones.
 {: .text-justify}
 
-> So far equivariance seems to be an interesting property to have. In order to achieve it, proved that convolution is not only sufficient but necessary as well. - [Risi and Shubhendu](https://arxiv.org/abs/1802.03690)
+> “Convolutional structure is not just a sufficient, but
+also a necessary condition for equivariance to the
+action of a compact group.” - [Risi and Shubhendu](https://arxiv.org/abs/1802.03690)
 
 
 
