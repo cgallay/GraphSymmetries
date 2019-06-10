@@ -42,6 +42,9 @@ plugins:
   - jemoji
   - jekyll-include-cache
 
+
+
+
 author:
   name   : "Charles Gallay"
   avatar : "/assets/images/bio-photo.jpg"
@@ -77,6 +80,7 @@ defaults:
     values:
       layout: single
       author_profile: true
+      classes: wide
       read_time: true
       comments: true
       share: true
