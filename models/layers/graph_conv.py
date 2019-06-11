@@ -16,6 +16,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import numpy as np
+import scipy
 import pygsp as pg
 
 from grid2d import Grid2d
@@ -81,7 +82,7 @@ def create_random_walk_matrix(size_x, size_y, graph_orientations={}):
     0: use the grid2d graph
     """
     graph = LineGrid2d(size_x, size_y, graph_orientations)
-    rand_walk = np.diag(np.ones(graph.d.shape) / graph.d) @ graph.A
+    rand_walk = scipy.sparse.diags(np.ones(graph.d.shape) / graph.d) @ graph.A
     rand_walk = rand_walk.astype(np.float32)
 
     # Convert to pytorch sparse tensor
