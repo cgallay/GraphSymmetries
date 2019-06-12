@@ -1,28 +1,15 @@
 #!/usr/bin/env python3
 
-r"""
-PyTorch implementation of a convolutional neural network on graphs based on
-Chebyshev polynomials of the graph Laplacian.
-See https://arxiv.org/abs/1606.09375 for details.
-Copyright 2018 Michaël Defferrard.
-Released under the terms of the MIT license.
-"""
-
-
 import math
 
+import numpy as np
 from scipy import sparse
+import scipy
 import torch
 from torch import nn
 import torch.nn.functional as F
-import numpy as np
-import scipy
-import pygsp as pg
 
-from grid2d import Grid2d
-from utils.argparser import get_args
-from utils.graph import LineGrid2d
-args = get_args()
+from graphSym.utils.graph import LineGrid2d
 
 
 # State-less function.
@@ -59,26 +46,10 @@ def graph_conv(laplacian, x, weight):
 
     return x
 
-
-def create_laplacian(size_x, size_y):
-    diagonal = 1/math.pow(2, 0.5) if args.diagonals else 0.0 
-    graph = Grid2d(size_x, size_y, diagonal=diagonal)
-    laplacian = graph.L.astype(np.float32)
-    laplacian = prepare_laplacian(laplacian)
-    return laplacian.to(args.device)
-
-
-def create_vertical_laplacian(size_x, size_y, vertical=True):
-    diagonal = 1/math.pow(2, 0.5) if args.diagonals else 0.0 
-    graph = LineGrid2d(size_x, size_y, {'top', 'bottom'} if vertical else {'left', 'right'})
-    laplacian = graph.L.astype(np.float32)
-    laplacian = prepare_laplacian(laplacian)
-    return laplacian.to(args.device)
-
 def create_random_walk_matrix(size_x, size_y, graph_orientations={}):
     """
     differents modes:
-
+    TODO: add doc
     0: use the grid2d graph
     """
     graph = LineGrid2d(size_x, size_y, graph_orientations)
@@ -95,52 +66,19 @@ def create_random_walk_matrix(size_x, size_y, graph_orientations={}):
 
     rand_walk = torch.sparse_coo_tensor(indices, rand_walk.data, rand_walk.shape)
     rand_walk = rand_walk.coalesce()  # More efficient subsequent operations
-    return rand_walk.to(args.device)
+    return rand_walk
 
 
-def prepare_laplacian(laplacian):
-    r"""Prepare a graph Laplacian to be fed to a graph convolutional layer."""
-
-    def estimate_lmax(laplacian, tol=5e-3):
-        r"""Estimate the largest eigenvalue of an operator."""
-        lmax = sparse.linalg.eigsh(laplacian, k=1, tol=tol,
-                                   ncv=min(laplacian.shape[0], 10),
-                                   return_eigenvectors=False)
-        lmax = lmax[0]
-        lmax *= 1 + 2*tol  # Be robust to errors.
-        return lmax
-
-    def scale_operator(L, lmax, scale=1):
-        r"""Scale an operator's eigenvalues from [0, lmax] to [-scale, scale]."""
-        I = sparse.identity(L.shape[0], format=L.format, dtype=L.dtype)
-        L *= 2 * scale / lmax
-        L -= I
-        return L
-
-    lmax = estimate_lmax(laplacian)
-    laplacian = scale_operator(laplacian, lmax, args.L_scale)
-
-    laplacian = sparse.coo_matrix(laplacian)
-
-    # PyTorch wants a LongTensor (int64) as indices (it'll otherwise convert).
-    indices = np.empty((2, laplacian.nnz), dtype=np.int64)
-    np.stack((laplacian.row, laplacian.col), axis=0, out=indices)
-    indices = torch.from_numpy(indices)
-
-    laplacian = torch.sparse_coo_tensor(indices, laplacian.data, laplacian.shape)
-    laplacian = laplacian.coalesce()  # More efficient subsequent operations.
-    return laplacian
-
-class FixGraphConv(torch.nn.Module):
+class GridGraphConv(torch.nn.Module):
     """
     Convolution on a Grid graph. For images.
     """
 
     def __init__(self, in_channels, out_channels, kernel_size=3, bias=True,
-                 input_shape=(32,32), conv=graph_conv, merge_way='mean', same_filters=True,
+                 input_shape=(32,32), merge_way='mean', same_filters=True,
                  underlying_graphs=None):
         """
-
+        TODO: Add doc
         same_filters: bool
             when true the same filter is used on each different underlying sub-graphs
         underlying_graphs: list[Set[str]]
@@ -151,7 +89,6 @@ class FixGraphConv(torch.nn.Module):
 
         if underlying_graphs is None:
             underlying_graphs = [{'left', 'right', 'top', 'bottom'}]
-
 
         self.merge_way = merge_way
         self.same_filters = same_filters
@@ -190,7 +127,7 @@ class FixGraphConv(torch.nn.Module):
         """
         x is of shape [batch_size, nb_features_ini, nb_node]
         """
-        # x = self._pad(x)
+
         x = x.permute(0, 2, 1)  # shape it for the graph conv
 
         # Compute outputs
@@ -216,6 +153,13 @@ class FixGraphConv(torch.nn.Module):
         return out
 
 
+r"""
+PyTorch implementation of a convolutional neural network on graphs based on
+Chebyshev polynomials of the graph Laplacian.
+See https://arxiv.org/abs/1606.09375 for details.
+Copyright 2018 Michaël Defferrard.
+Released under the terms of the MIT license.
+"""
 # State-full class.
 class GraphConv(torch.nn.Module):
     """Graph convolutional layer.
