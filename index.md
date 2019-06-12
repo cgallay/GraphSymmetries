@@ -64,10 +64,16 @@ To exploit the symmetries, we worked on graphs where convolution is invariant to
 
 {% include feature_row %}
 
+<figure style="width:250px; margin-top:-20px; margin-bottom:0px" class="align-left">
+  <a href="docs/images/combined_graph.png"><img src="docs/images/combined_graph.png"></a>
+    <figcaption>Figure 2: Click to zoom.</figcaption>
+</figure>
 
-By concatenating the outputs of the convolution applied on those different underlying graphs, we can build networks that are invariant to the desired symmetries only. For example, in the case of the graph below, we have a GCNN that is only invariant to horizontal mirroring. (TODO add the graph)
+
+By concatenating the outputs of the convolution applied on those different underlying graphs, we can build networks that are invariant  the desired symmetries only. For example, in the case of the graph in figure 2, we have a GCNN that is only invariant to horizontal mirroring.
 {: .text-justify}
 
+<br/>
 
 ## Experimentation
 
