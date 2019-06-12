@@ -3,7 +3,7 @@ title:  "How to choose the image’s symmetries with graph neural network"
 layout: splash
 classes: wide
 
-excerpt: "By [Charles Gallay](https://github.com/cgallay) under supervision of [Michaël Defferrard](http://deff.ch) and [Nathanaël Perraudin](https://perraudin.info)"
+excerpt: "By [Charles Gallay](https://github.com/cgallay) under the supervision of [Michaël Defferrard](http://deff.ch) and [Nathanaël Perraudin](https://perraudin.info)"
 header:
   overlay_image: docs/images/symmetries.png
   overlay_filter: rgba(125, 125, 125, 0.9)
@@ -31,7 +31,7 @@ feature_row:
 
 ## Motivation:
 
-Symmetries are naturally present in images. From two similar objects appearing in different locations, to different points of view. These high level of symmetries induce a high degree of correlation between pixels of different images representing the same object that is worth exploiting. This blogpost provides the reader with a [framework](https://github.com/cgallay/GraphSymmetries/) that aims at testing the presence of hidden symmetries in datasets. We showed that by exploiting the knowledge of true symmetries residing in images, we can apply an appropriate strategy that does in fact improve accuracy. As frequently shown in machine learning, having some insights of your dataset has always given some advantages.
+Symmetries are naturally present in images. For instance, two similar objects appearing at different locations or being seen from different points of view are sharing symmetrical properties. These high level of symmetries induce a high degree of correlation between pixels of different images representing the same object that is worth exploiting. This blogpost provides the reader with a [framework](https://github.com/cgallay/GraphSymmetries/) that aims at testing the presence of hidden symmetries in datasets. We showed that by exploiting the knowledge of true symmetries residing in images, we can apply an appropriate strategy that does in fact improve accuracy. As frequently shown in machine learning, having some insights of your dataset has always given some advantages.
 {: .text-justify}
 
 ## Exploiting Symmetries
