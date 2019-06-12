@@ -1,9 +1,0 @@
-{
-	"underlying_graphs": [
-		["left", "right"],
-		["top"],
-        ["bottom"]
-	],
-	"merge_way": "cat",
-	"same_filters": true
-}
