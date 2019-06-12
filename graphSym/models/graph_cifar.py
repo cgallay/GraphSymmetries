@@ -20,7 +20,7 @@ class GraphConvNetCIFAR(nn.Module):
         layers = []
 
         nb_filter_1 = 66 
-        nb_filter_2 = 98
+        nb_filter_2 = 99
 
         layer, out_shape = get_layer(3, nb_filter_1, input_shape, pooling_layer=False)
         layers.append(layer)
