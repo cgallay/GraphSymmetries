@@ -1,5 +1,5 @@
 ---
-title:  "How to choose the image’s symmetries with graph neural network"
+title:  "Exploiting symmetries (in images) with graph neural networks"
 layout: splash
 classes: wide
 
@@ -29,14 +29,14 @@ feature_row:
 
 
 
-## Motivation:
+## Motivation
 
 Symmetries are naturally present in images. For instance, two similar objects appearing at different locations or being seen from different points of view are sharing symmetrical properties. These high level of symmetries induce a high degree of correlation between pixels of different images representing the same object that is worth exploiting. This blogpost provides the reader with a [framework](https://github.com/cgallay/GraphSymmetries/) that aims at testing the presence of hidden symmetries in datasets. We showed that by exploiting the knowledge of true symmetries residing in images, we can apply an appropriate strategy that does in fact improve accuracy. As frequently shown in machine learning, having some insights of your dataset has always given some advantages.
 {: .text-justify}
 
 ## Exploiting Symmetries
 
-To take advantage of those symmetries, people usually apply transformations to the input images. Newly derived images are similar enough to belong to the original class. While the information contained in those transformed images and might seem quite redundant to humans, they appear different to CNN. This allows the network to be able to extract new relevant features and  leads to better performance when applied to images close to transformed ones. Depending on the dataset, typical transformations include but are not limited to random rotations, cropping, illuminance variation and resizing. This technique, known as “Data Augmentation”, has shown to help CNN to better generalize.
+To take advantage of those symmetries, people usually apply transformations to the input images. Newly derived images are similar enough to belong to the original class. While the information contained in those transformed images and might seem quite redundant to humans, they appear different to CNN. This allows the network to be able to extract new relevant features and  leads to better performance when applied to images close to transformed ones. Depending on the dataset, typical transformations include but are not limited to random rotations, cropping, illuminance variation and resizing. This technique, known as [Data Augmentation](https://medium.com/nanonets/how-to-use-deep-learning-when-you-have-limited-data-part-2-data-augmentation-c26971dc8ced), has shown to help CNN to better generalize.
 {: .text-justify}
 
 
@@ -45,7 +45,7 @@ To take advantage of those symmetries, people usually apply transformations to t
     <figcaption>Figure 1: Example of filters learned by a standard CNN. Note that some filters learned are rotation of other ones.</figcaption>
 </figure>
 
-But creating artificial data introduces a lot of correlation among the weights learned during training. What if we could exploit those symmetries in a smarter way and build them directly into the network ? What if the network we design could react in a predictable way when faced with transformed data? This property is what we call equivariance. Classical CNN are translation equivariant, which allows for weight sharing.It has shown to help a lot the network to learn filters that can be shared across locations, therefore removing the need of learning the same filters for different locations. Recently [Cohen](https://github.com/tscohen/GrouPy), has demonstrated that you can design networks equivariant to any transformation from any [compact group](https://en.wikipedia.org/wiki/Compact_group). In his implementation, the weights of the filter are shared among all 90 degrees rotations of an image. As an illustration of the utility, the network would have to learn only one edge detector, while a standard CNN would have to learn two vertical and two horizontal ones (See Figure 1).
+But creating artificial data introduces a lot of correlation among the weights learned during training. What if we could exploit those symmetries in a smarter way and build them directly into the network ? What if the network we design could react in a predictable way when faced with transformed data? This property is what we call equivariance. Classical CNN are translation equivariant, which allows for weight sharing.It has shown to help a lot the network to learn filters that can be shared across locations, therefore removing the need of learning the same filters for different locations. Recently [Taco Cohen](https://github.com/tscohen/GrouPy), has demonstrated that you can design networks equivariant to any transformation from any [compact group](https://en.wikipedia.org/wiki/Compact_group). In his implementation, the weights of the filter are shared among all 90 degrees rotations of an image. As an illustration of the utility, the network would have to learn only one edge detector, while a standard CNN would have to learn two vertical and two horizontal ones (See Figure 1).
 {: .text-justify}
 
 > “Convolutional structure is not just a sufficient, but
@@ -53,6 +53,7 @@ also a necessary condition for equivariance to the
 action of a compact group.” - [Risi and Shubhendu](https://arxiv.org/abs/1802.03690)
 
 This strong relation between convolution and equivarience highlighted by Risi and Shubhendu, encouraged us to build an architecture that performs convolutions in order to be equivariant and augment their weight sharing. 
+{: .text-justify}
 
 
 ## Grid Graph symmetries
@@ -93,7 +94,7 @@ On CIFAR-10 training was performed with 20% of the dataset and models of roughly
 </figure>
 
 ### Datasets
-Coming from all that background, we want to check which symmetries is worth exploiting. We conducted an experience on two different datasets for a classification task, [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) and [AID](https://arxiv.org/abs/1608.05167) (satellite images). The first one is under the effect of gravity while the other one seems anisotropic (does not depend on direction). Those datasets are a good fit to check invariance build into networks for different types of symmetries as shown below.
+Coming from all that background, we want to check which symmetries is worth exploiting. We conducted an experience on two different datasets for a classification task, [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) and [AID](https://arxiv.org/abs/1608.05167) (satellite images). The first one is under the effect of gravity while for the other one the orientation of the images is arbitrary. Those datasets are a good fit to check invariance build into networks for different types of symmetries as shown below.
 {: .text-justify}
 
 ### Test on CIFAR10
