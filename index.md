@@ -43,7 +43,7 @@ To take advantage of those symmetries, people usually apply transformations to t
 <figure style="width: 200px" class="align-right">
      <a href="docs/images/low_layer_filters.jpeg"><img src="docs/images/low_layer_filters.jpeg"></a>
     <figcaption>Figure 1: Example of filters learned by a standard CNN. Note that some filters learned are rotation of other ones.
-Credits: Stanford's [CS 231N course](http://cs231n.stanford.edu/)</figcaption>
+<br/>Credits: Stanford's <a href="http://cs231n.stanford.edu/">CS 231N course</a></figcaption>
 </figure>
 
 But creating artificial data introduces a lot of correlation among the weights learned during training. What if we could exploit those symmetries in a smarter way and build them directly into the network ? What if the network we design could react in a predictable way when faced with transformed data? This property is what we call equivariance. Classical CNN are translation equivariant, which allows for weight sharing.It has shown to help a lot the network to learn filters that can be shared across locations, therefore removing the need of learning the same filters for different locations. Recently [Taco Cohen](https://github.com/tscohen/GrouPy), has demonstrated that you can design networks equivariant to any transformation from any [compact group](https://en.wikipedia.org/wiki/Compact_group). In his implementation, the weights of the filter are shared among all 90 degrees rotations of an image. As an illustration of the utility, the network would have to learn only one edge detector, while a standard CNN would have to learn two vertical and two horizontal ones (See Figure 1).
