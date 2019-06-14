@@ -40,12 +40,12 @@ feature_row:
      <figcaption>Credits: <a href="http://pngimg.com/download/1065">pngimg</a></figcaption>
 </figure>
 
-Symmetries are naturally present in images. Look at butterflies for example, where an axial symmetry is clearly visible. Same object seen from other orientations appears to be symmetrical as well. While some symmetries are quite easy to distinguish, some are often hidden. What if we could find or at least check the presence of some symmetries? This blogpost provides the reader with a [framework](https://github.com/cgallay/GraphSymmetries/) that aims at testing the existence of those hidden symmetries in datasets. We showed that by exploiting the knowledge of true symmetries residing in images, we can apply an appropriate strategy that does in fact improve accuracy. As frequently shown in machine learning, having some insights of your dataset has gives some advantages.
+Symmetries are naturally present in images. Look at butterflies for example, where an axial symmetry is clearly visible. Same object seen from other orientations appears to be symmetrical as well. While some symmetries are quite easy to detect, some are often hidden. What if we could find or at least check their presence in datasets? This blogpost provides the reader with a [framework](https://github.com/cgallay/GraphSymmetries/) that aims at testing the existence of those hidden symmetries in data. We showed that by exploiting the knowledge of true symmetries residing in images, we can apply an appropriate strategy that does in fact improve accuracy. As frequently shown in machine learning, having some insights of your dataset has gives some advantages.
 {: .text-justify}
 
 ## Exploiting Symmetries
 
-To take advantage of those symmetries, people usually apply transformations to the input images. Newly derived images are similar enough to belong to the original class. While the information contained in those transformed images and might seem quite redundant to humans, they appear different to CNN. This allows the network to be able to extract new relevant features and  leads to better performance when applied to images close to transformed ones. Depending on the dataset, typical transformations include but are not limited to random rotations, cropping, illuminance variation and resizing. This technique, known as [Data Augmentation](https://medium.com/nanonets/how-to-use-deep-learning-when-you-have-limited-data-part-2-data-augmentation-c26971dc8ced), has shown to help CNN to better generalize.
+To take advantage of those symmetries, people usually apply transformations to the input images. Newly derived images are similar enough to belong to the original class. While the information contained in those transformed images might seem quite redundant to humans, they appear different to CNN. This allows the network to be able to extract new relevant features and  leads to better performance when applied to images close to transformed ones. Depending on the dataset, typical transformations include but are not limited to random rotations, cropping, illuminance variation and resizing. This technique, known as [Data Augmentation](https://medium.com/nanonets/how-to-use-deep-learning-when-you-have-limited-data-part-2-data-augmentation-c26971dc8ced), has shown to help CNN to better generalize.
 {: .text-justify}
 
 
@@ -55,7 +55,7 @@ To take advantage of those symmetries, people usually apply transformations to t
 <br/>Credits: Stanford's <a href="http://cs231n.stanford.edu/">CS 231N course</a></figcaption>
 </figure>
 
-But creating artificial data introduces a lot of correlation among the weights learned during training. What if we could exploit those symmetries in a smarter way and build them directly into the network ? What if the network we design could react in a predictable way when faced with transformed data? This property is what we call equivariance. Classical CNN are translation equivariant, which allows for weight sharing.It has shown to help a lot the network to learn filters that can be shared across locations, therefore removing the need of learning the same filters for different locations. Recently [Taco Cohen](https://github.com/tscohen/GrouPy), has demonstrated that you can design networks equivariant to any transformation from any [compact group](https://en.wikipedia.org/wiki/Compact_group). In his implementation, the weights of the filter are shared among all 90 degrees rotations of an image. As an illustration of the utility, the network would have to learn only one edge detector, while a standard CNN would have to learn two vertical and two horizontal ones (See Figure 1).
+But creating artificial data introduces a lot of correlation among the weights learned during training. What if we could exploit those symmetries in a smarter way and build them directly into the network ? What if the network we design could react in a predictable way when faced with transformed data? This property is what we call equivariance. Classical CNN are translation equivariant, which allows for weight sharing. It has shown to help a lot the network to learn filters that can be shared across locations, therefore removing the need of learning the same filters for different locations. Recently [Taco Cohen](https://github.com/tscohen/GrouPy), has demonstrated that you can design networks equivariant to any transformation from any [compact group](https://en.wikipedia.org/wiki/Compact_group). In his implementation, the weights of the filter are shared among all 90 degrees rotations of an image. As an illustration of utility, the network would have to learn one edge detector only, while a standard CNN would have to learn two vertical and two horizontal ones (See Figure 1).
 {: .text-justify}
 
 This equivariance to rotation achieved, by Taco Cohen, with his group convolution has been proved, by Risi and Shubhendu, to be the only way to get equivariance.
@@ -65,7 +65,7 @@ This equivariance to rotation achieved, by Taco Cohen, with his group convolutio
 also a necessary condition for equivariance to the
 action of a compact group.” - [Risi and Shubhendu](https://arxiv.org/abs/1802.03690)
 
-For the following, we build network that are invariant to some symmetries. Invariance being a special case of equivariance where the output doesn’t change at all. To do that we will still perform convolution, as it as proven to be necessary, but this time defined on graph.
+For the following, we build networks that are invariant to some symmetries. Invariance being a special case of equivariance where the output doesn’t change at all. To do that, we will still perform convolution, as it as proven to be necessary, but this time defined on graph.
 {: .text-justify}
 
 
@@ -79,7 +79,7 @@ For the following, we build network that are invariant to some symmetries. Invar
 </div>
 
 ### Invariance in graphs
-Some domain like graphs are by construction anisotropic. Basically, in those space there is no notion of ordering. In the graph domain each node has a set of neighbouring nodes but there is no way to tell from those nodes which one is located left or right, as those notion simply doesn’t exist. This is important to consider when designing a network to work on graph data. A reordering of the node (or renaming) doesn’t change the graph. When this is the case we say that graphs are isomorphic to each other (See Figure 2) . We want two isomorphic graphs to have the exact same output when evaluated by a [Graph Convolutional](https://tkipf.github.io/graph-convolutional-networks/) Neural Network (GCNN). This impose GCNN to be invariant to permutation of the neighbouring nodes. In our case, working with 2dGrid graph, this translate into invariance to rotation and mirroring as shown below. 
+Some domain like graphs, filter learned by convolutions are by construction [isotropic](https://en.wikipedia.org/wiki/Isotropy). Basically, in those spaces there is no notion of ordering. In the graph domain each node has a set of neighbouring nodes, but there is no way to tell from those nodes which one is located left or right. Those notion simply doesn’t exist. This is important to consider when designing a network to work on graph data. A reordering of the node (or renaming) doesn’t change the graph. When this is the case we say that graphs are isomorphic to each other (See Figure 2). We want two isomorphic graphs to have the exact same output when evaluated by a [Graph Convolutional](https://tkipf.github.io/graph-convolutional-networks/) Neural Network (GCNN). This impose GCNN to be invariant to permutation of the neighbouring nodes. In our case, working with 2dGrid graph, this translate into invariance to rotation and mirroring as shown below. 
 {: .text-justify}
 
 ### Underlying graphs
@@ -94,7 +94,7 @@ The network we design have an invariance property to different transformations d
 </figure>
 
 
-By concatenating the outputs of the convolution applied on those different underlying graphs, we can build networks that are invariant  the desired symmetries only. For example, in the case of the graph in figure 3, we have a GCNN that is only invariant to horizontal mirroring.
+By concatenating the outputs of the convolution applied on those different underlying graphs, we can build networks that are invariant the desired symmetries only. For example, in the case of the graph in figure 3, we have a GCNN that is only invariant to horizontal mirroring.
 {: .text-justify}
 
 <br/>
@@ -117,12 +117,12 @@ On CIFAR-10 training was performed with 20% of the dataset and models of roughly
 </figure>
 
 ### Datasets
-Coming from all that background, we want to check which symmetries is worth exploiting. We conducted an experience on two different datasets for a classification task, [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) and [AID](https://arxiv.org/abs/1608.05167) (satellite images). The first one is under the effect of gravity while for the other one the orientation of the images is arbitrary. Those datasets are a good fit to check invariance build into networks for different types of symmetries as shown below.
+Coming from all that background, we want to check which symmetries is worth exploiting. We conducted an experience on two different datasets for a classification task, [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) and [AID](https://arxiv.org/abs/1608.05167) (satellite images). The first one is under the effect of gravity while for the other one the orientation of the images is arbitrary. Those datasets are a good fit to check invariance build into networks as we expect them to possess different types of symmetries. We will check for them below.
 {: .text-justify}
 
 ### Test on CIFAR10
 
-By looking at the result table, we deduce that apart from horizontal symmetries being invariant to other ones, badly affects the accuracy. It might be explained by the fact that gravity plays an important role in natural images, therefore you usually don't have vertical symmetries. On the other hand, it is often the case that you find horizontal symmetries in the natural world.
+By looking at the result (See table 1), we deduce that apart from horizontal symmetries being invariant to other ones, badly affects the accuracy. It might be explained by the fact that gravity plays an important role in natural images, therefore you usually don't have vertical symmetries. On the other hand, it is often the case that you find horizontal symmetries in the natural world.
 {: .text-justify}
 
 ### Test on AID
@@ -132,9 +132,9 @@ Compared to CIFAR-10, we see that, independently of the network architecture, re
 
 ## Conclusion
 
-In that blog post we showed that by using the flexibility of graph convolution techniques, we can test the presence of symmetries. This study highlights the fact that invariance is a property that is beneficial for the network if used appropriately, but can reduce the accuracy as well. Therefore knowing what kind of symmetry is present into your data is crucial when designing your network.
+In that blog post we showed that by using the flexibility of graph convolution techniques, we can test the presence of symmetries. This study highlights the fact that invariance is a property that is beneficial for the network if used appropriately, but can badly reduce the accuracy as well. Therefore knowing what kind of symmetry is present into your data is crucial when designing your network.
 {: .text-justify}
 
-During that experimentation the invariance to symmetries have been chosen by human (designing the underlying graph). By exploiting the flexibility of graph framework, it would be interesting to let the network learn the underlying graphs. If we restrain the network to learn regular graph only, it should be able to learn the optimal ones for each dataset, namely the ones reflecting the symmetries hidden in the dataset. 
+During that experimentation the invariance to symmetries have been chosen by human (design of the underlying graphs). By exploiting the flexibility of graph framework, it would be interesting to let the network learn those underlying graphs. If we restrain the network to learn regular graphs only, it should be able to learn the optimal ones for each dataset, namely the ones reflecting the symmetries hidden in the dataset. 
 {: .text-justify}
 
