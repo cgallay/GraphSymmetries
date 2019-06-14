@@ -8,6 +8,10 @@ header:
   overlay_image: docs/images/symmetries.png
   overlay_filter: rgba(125, 125, 125, 0.9)
   caption: "Photo credit: [**Wikipedia**](https://en.wikipedia.org/wiki/Symmetry_group)"
+  actions:
+     - label: "Source code"
+       url: "https://github.com/cgallay/GraphSymmetries/"
+
 
 
 feature_row:
@@ -58,21 +62,31 @@ This strong relation between convolution and equivarience highlighted by Risi an
 
 
 ## Grid Graph symmetries
+<div class="align-right" style="width: 200px">
+<figure class="half">
+    <a href="docs/images/iso_graph_1.png"><img src="docs/images/iso_graph_1.png"></a>
+    <a href="docs/images/iso_graph_2.png"><img src="docs/images/iso_graph_2.png" align="middle"></a>
+    <figcaption>Figure 2: Example of two isomorphic graphs. <br/> Credit: <a href="https://en.wikipedia.org/wiki/Graph_isomorphism">Wikipedia</a></figcaption>
+</figure>
+</div>
+
+### Invariance in graphs
+Some domain like graphs are by construction anisotropic. Basically, in those space there is no notion of ordering. In the graph domain each node has a set of neighbouring nodes but there is no way to tell from those nodes which one is located left or right, as those notion simply doesn’t exist. This is important to consider when designing a network to work on graph data. A reordering of the node (or renaming) doesn’t change the graph. When this is the case we say that graphs are isomorphic to each other (See Figure 2) . We want two isomorphic graphs to have the exact same output when evaluated by a [Graph Convolutional](https://tkipf.github.io/graph-convolutional-networks/) Neural Network (GCNN). This impose GCNN to be invariant to permutation of the neighbouring nodes. Invariance being a special case of equivariance where the output doesn’t change at all. In our case, working with 2dGrid graph, this translate into invariance to rotation and mirroring as shown below. 
+{: .text-justify}
 
 ### Underlying graphs
-
-To exploit the symmetries, we worked on graphs where convolution is invariant to permutation of neighbouring nodes. Invariance being a special case of equivariance where the output doesn’t change at all. The network we design have an invariance property to different transformations depending on the underlying graph we use. We present here, the different ones we designed and explain their group symmetries.
+The network we design have an invariance property to different transformations depending on the underlying graph we use. We present here, the different ones we designed and explain their group symmetries.
 {: .text-justify}
 
 {% include feature_row %}
 
 <figure style="width:250px; margin-top:-20px; margin-bottom:0px" class="align-left">
   <a href="docs/images/combined_graph.png"><img src="docs/images/combined_graph.png"></a>
-    <figcaption>Figure 2: Click to zoom.</figcaption>
+    <figcaption>Figure 3: Click to zoom.</figcaption>
 </figure>
 
 
-By concatenating the outputs of the convolution applied on those different underlying graphs, we can build networks that are invariant  the desired symmetries only. For example, in the case of the graph in figure 2, we have a GCNN that is only invariant to horizontal mirroring.
+By concatenating the outputs of the convolution applied on those different underlying graphs, we can build networks that are invariant  the desired symmetries only. For example, in the case of the graph in figure 3, we have a GCNN that is only invariant to horizontal mirroring.
 {: .text-justify}
 
 <br/>
@@ -112,9 +126,6 @@ Compared to CIFAR-10, we see that, independently of the network architecture, re
 
 In that blog post we showed that by using the flexibility of graph convolution techniques, we can test the presence of symmetries. This study highlights the fact that invariance is a property that is beneficial for the network if used appropriately, but can reduce the accuracy as well. Therefore knowing what kind of symmetry is present into your data is crucial when designing your network.
 {: .text-justify}
-
-
-## Future work
 
 During that experimentation the invariance to symmetries have been chosen by human (designing the underlying graph). By exploiting the flexibility of graph framework, it would be interesting to let the network learn the underlying graphs. If we restrain the network to learn regular graph only, it should be able to learn the optimal ones for each dataset, namely the ones reflecting the symmetries hidden in the dataset. 
 {: .text-justify}
