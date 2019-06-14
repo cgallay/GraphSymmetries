@@ -2,6 +2,11 @@
 title:  "Exploiting symmetries (in images) with graph neural networks"
 layout: splash
 classes: wide
+analytics:
+  provider: "google-gtag"
+  google:
+    tracking_id: "UA-142118867-1"
+    anonymize_ip: false # default
 
 excerpt: "By [Charles Gallay](https://github.com/cgallay) under the supervision of [Michaël Defferrard](http://deff.ch) and [Nathanaël Perraudin](https://perraudin.info)"
 header:
