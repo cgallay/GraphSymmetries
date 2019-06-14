@@ -35,7 +35,12 @@ feature_row:
 
 ## Motivation
 
-Symmetries are naturally present in images. For instance, two similar objects appearing at different locations or being seen from different points of view are sharing symmetrical properties. These high level of symmetries induce a high degree of correlation between pixels of different images representing the same object that is worth exploiting. This blogpost provides the reader with a [framework](https://github.com/cgallay/GraphSymmetries/) that aims at testing the presence of hidden symmetries in datasets. We showed that by exploiting the knowledge of true symmetries residing in images, we can apply an appropriate strategy that does in fact improve accuracy. As frequently shown in machine learning, having some insights of your dataset has always given some advantages.
+<figure style="width: 100px" class="align-right">
+     <a href="docs/images/butterfly2.png"><img src="docs/images/butterfly2.png"></a>
+     <figcaption>Credits: <a href="http://pngimg.com/download/1065">pngimg</a></figcaption>
+</figure>
+
+Symmetries are naturally present in images. Look at butterflies for example, where an axial symmetry is clearly visible. Same object seen from other orientations appears to be symmetrical as well. While some symmetries are quite easy to distinguish, some are often hidden. What if we could find or at least check the presence of some symmetries? This blogpost provides the reader with a [framework](https://github.com/cgallay/GraphSymmetries/) that aims at testing the existence of those hidden symmetries in datasets. We showed that by exploiting the knowledge of true symmetries residing in images, we can apply an appropriate strategy that does in fact improve accuracy. As frequently shown in machine learning, having some insights of your dataset has gives some advantages.
 {: .text-justify}
 
 ## Exploiting Symmetries
