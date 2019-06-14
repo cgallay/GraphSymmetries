@@ -8,6 +8,13 @@ github_username: cgallay
 minimal_mistakes_skin: default
 search: true
 
+analytics:
+  provider: "google-gtag"
+  google:
+    tracking_id: "UA-142118867-1"
+    anonymize_ip: false # default
+
+
 # Build settings
 markdown: kramdown
 remote_theme: mmistakes/minimal-mistakes
