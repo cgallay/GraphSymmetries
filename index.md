@@ -58,11 +58,14 @@ To take advantage of those symmetries, people usually apply transformations to t
 But creating artificial data introduces a lot of correlation among the weights learned during training. What if we could exploit those symmetries in a smarter way and build them directly into the network ? What if the network we design could react in a predictable way when faced with transformed data? This property is what we call equivariance. Classical CNN are translation equivariant, which allows for weight sharing.It has shown to help a lot the network to learn filters that can be shared across locations, therefore removing the need of learning the same filters for different locations. Recently [Taco Cohen](https://github.com/tscohen/GrouPy), has demonstrated that you can design networks equivariant to any transformation from any [compact group](https://en.wikipedia.org/wiki/Compact_group). In his implementation, the weights of the filter are shared among all 90 degrees rotations of an image. As an illustration of the utility, the network would have to learn only one edge detector, while a standard CNN would have to learn two vertical and two horizontal ones (See Figure 1).
 {: .text-justify}
 
+This equivariance to rotation achieved, by Taco Cohen, with his group convolution has been proved, by Risi and Shubhendu, to be the only way to get equivariance.
+{: .text-justify}
+
 > “Convolutional structure is not just a sufficient, but
 also a necessary condition for equivariance to the
 action of a compact group.” - [Risi and Shubhendu](https://arxiv.org/abs/1802.03690)
 
-This strong relation between convolution and equivarience highlighted by Risi and Shubhendu, encouraged us to build an architecture that performs convolutions in order to be equivariant and augment their weight sharing. 
+For the following, we build network that are invariant to some symmetries. Invariance being a special case of equivariance where the output doesn’t change at all. To do that we will still perform convolution, as it as proven to be necessary, but this time defined on graph.
 {: .text-justify}
 
 
@@ -71,12 +74,12 @@ This strong relation between convolution and equivarience highlighted by Risi an
 <figure class="half">
     <a href="docs/images/iso_graph_1.png"><img src="docs/images/iso_graph_1.png"></a>
     <a href="docs/images/iso_graph_2.png"><img src="docs/images/iso_graph_2.png" align="middle"></a>
-    <figcaption>Figure 2: Example of two isomorphic graphs. <br/> Credit: <a href="https://en.wikipedia.org/wiki/Graph_isomorphism">Wikipedia</a></figcaption>
+    <figcaption>Figure 2: Example of two isomorphic graphs. <br/> Credits: <a href="https://en.wikipedia.org/wiki/Graph_isomorphism">Wikipedia</a></figcaption>
 </figure>
 </div>
 
 ### Invariance in graphs
-Some domain like graphs are by construction anisotropic. Basically, in those space there is no notion of ordering. In the graph domain each node has a set of neighbouring nodes but there is no way to tell from those nodes which one is located left or right, as those notion simply doesn’t exist. This is important to consider when designing a network to work on graph data. A reordering of the node (or renaming) doesn’t change the graph. When this is the case we say that graphs are isomorphic to each other (See Figure 2) . We want two isomorphic graphs to have the exact same output when evaluated by a [Graph Convolutional](https://tkipf.github.io/graph-convolutional-networks/) Neural Network (GCNN). This impose GCNN to be invariant to permutation of the neighbouring nodes. Invariance being a special case of equivariance where the output doesn’t change at all. In our case, working with 2dGrid graph, this translate into invariance to rotation and mirroring as shown below. 
+Some domain like graphs are by construction anisotropic. Basically, in those space there is no notion of ordering. In the graph domain each node has a set of neighbouring nodes but there is no way to tell from those nodes which one is located left or right, as those notion simply doesn’t exist. This is important to consider when designing a network to work on graph data. A reordering of the node (or renaming) doesn’t change the graph. When this is the case we say that graphs are isomorphic to each other (See Figure 2) . We want two isomorphic graphs to have the exact same output when evaluated by a [Graph Convolutional](https://tkipf.github.io/graph-convolutional-networks/) Neural Network (GCNN). This impose GCNN to be invariant to permutation of the neighbouring nodes. In our case, working with 2dGrid graph, this translate into invariance to rotation and mirroring as shown below. 
 {: .text-justify}
 
 ### Underlying graphs
