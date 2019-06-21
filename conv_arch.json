@@ -1,8 +1,0 @@
-{
-	"underlying_graphs": [
-		["left", "right", "top", "bottom"],
-		["left", "bottom"]
-	],
-	"merge_way": "mean",
-	"same_filters": true
-}
