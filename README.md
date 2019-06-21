@@ -29,8 +29,35 @@ As a first measure, classical CNN and equivariant to rotation CNN are compare on
 
 ```python
 
-#TODO: add an example...
+import torch.nn as nn
 
+from graphSym.graph_conv import GridGraphConv
+from graphSym.graph_pool import GraphMaxPool2d
+
+class Net(nn.Module):
+    """
+    Network with Horizontal symetry
+    """
+    def __init__(self, input_shape=(32,32), nb_class=5):
+        super().__init__()
+        underlying_graphs = [['left', 'right'], ['top'], ['bottom']]
+        conv1 = GridGraphConv(3, 30, merge_way='cat', underlying_graphs=underlying_graphs)
+        conv2 = GridGraphConv(30, 60, merge_way='cat', underlying_graphs=underlying_graphs)
+        
+        pool1 = GraphMaxPool2d(input_shape=input_shape)
+        out_shape = (16, 16)
+        
+        conv3 = GridGraphConv(60, 60, input_shape=out_shape, merge_way='cat', underlying_graphs=underlying_graphs)
+        conv4 = GridGraphConv(60, nb_class, input_shape=out_shape, merge_way='mean', underlying_graphs=underlying_graphs)
+        
+        self.seq = nn.Sequential(conv1, conv2, pool1, conv3, conv4)
+        
+    def forward(self, x):
+        out = self.seq(x)
+        out = out.mean(2)
+        return out
+
+net = Net()
 ```
 
 ## License
